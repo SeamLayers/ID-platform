@@ -15,12 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('branch_id')->nullable()->constrained('company_branches')->nullOnDelete();
-
             $table->foreignId('role_id')->nullable()->constrained()->nullOnDelete();
-
             $table->string('employee_number')->unique();
             $table->string('iqama_number')->unique();
-
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone')->nullable();
@@ -29,7 +27,10 @@ return new class extends Migration
                 ->constrained()
                 ->nullOnDelete();
             $table->string('status')->default('active');
-
+            $table->string('device_token')->nullable();
+            $table->string('sex')->nullable();
+            $table->string('material_status')->nullable();
+            $table->string('country_code')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

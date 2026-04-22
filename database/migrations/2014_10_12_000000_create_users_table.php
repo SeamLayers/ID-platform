@@ -11,15 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('companies', function (Blueprint $table) {
+
+
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
+
             $table->string('name');
-            $table->string('commercial_register')->nullable();
+            $table->string('email')->unique();
+            $table->string('password');
+
             $table->string('phone')->nullable();
-            $table->string('email')->nullable();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('ip_address')->nullable();
+
+            $table->string('user_type')->default('employee');
+
+            $table->string('reset_otp')->nullable();
+            $table->timestamp('otp_expires_at')->nullable();
+
+            $table->rememberToken();
             $table->timestamps();
-            $table->softDeletes();
+
+            $table->index('user_type');
         });
     }
 
@@ -28,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('companies');
+        Schema::dropIfExists('users');
     }
 };

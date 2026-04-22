@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Login
      */
-    public function store(Request $request)
+    public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email'        => 'required|email',
@@ -48,21 +48,24 @@ class AuthenticatedSessionController extends Controller
             );
         }
 
-        // Update device token
+        // Update device token safely
         $user->update([
             'device_token' => $request->device_token
         ]);
 
-        // Create token
+        // Create API token
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return ResponseHelper::success(
-            [
-                'user'  => $user,
-                'token' => $token
+        return ResponseHelper::success([
+            'user' => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'roles' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
-            __('messages.login_success')
-        );
+            'token' => $token,
+        ], __('messages.login_success'));
     }
 
     /**

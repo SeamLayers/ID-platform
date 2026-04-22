@@ -12,6 +12,9 @@ use App\Http\Controllers\Setting\{
     NotificationController,
     SettingController
 };
+use \App\Http\Controllers\Dashboard\{
+    CompanyController
+};
 
 
 Route::prefix('v1')->group( function () {
@@ -21,10 +24,30 @@ Route::prefix('v1')->group( function () {
     | Authentication Routes
     |--------------------------------------------------------------------------
     */
+    Route::middleware(['auth', 'role:superadmin'])->group(function () {
+        Route::middleware(['permission:company.view'])->group(function () {
+            Route::apiResource('companies', CompanyController::class);
+        });
+
+    });
+
+
+    Route::middleware(['auth', 'role:owner'])->group(function () {
+        Route::middleware(['permission:company.view'])->group(function () {
+            Route::get('/owner/companies', [CompanyController::class, 'index']);
+        });
+    });
+
+
+    Route::middleware(['auth', 'role:employee'])->group(function () {
+        Route::get('/employee', fn () => 'Employee panel');
+    });
+
+
 
     Route::prefix('auth')->name('api.v1.auth.')->group(function () {
             Route::post('register', [RegisteredUserController::class, 'store'])->name('register');
-            Route::post('login', [AuthenticatedSessionController::class, 'store'])->name('login');
+            Route::post('login', [AuthenticatedSessionController::class, 'login'])->name('login');
             Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
             Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
             Route::post('send-otp', [RegisteredUserController::class, 'sendOtp'])->name('send-otp');

@@ -51,4 +51,8 @@ class Employee extends Model implements HasMedia
     public function businessCard() {
         return $this->hasOne(BusinessCard::class);
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

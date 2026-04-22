@@ -6,6 +6,7 @@ use App\Http\Helpers\ResponseHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Advertisement;
 use App\Models\AdvertisementContracts;
+use App\Models\Employee;
 use App\Models\OurWork;
 use App\Models\PaymentTransaction;
 use App\Models\Rating;
@@ -36,7 +37,7 @@ class RegisteredUserController extends Controller
         try {
             $request->validate([
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'email' => ['required', 'email', 'max:255', 'unique:employees,email'],
                 'password' => ['required', 'confirmed', Rules\Password::defaults()],
                 'sex' => ['required', 'in:male,female'],
                 'material_status' => ['required', 'in:married,single'],
@@ -59,15 +60,14 @@ class RegisteredUserController extends Controller
                 'Identity_number' => $request->Identity_number,
             ]);
 
-            // Create API token
             $user->token = $user->createToken('api-token')->plainTextToken;
 
-            // Fire email verification event
             event(new Registered($user));
 
             Auth::login($user);
 
             return ResponseHelper::success($user, __('messages.register_success'));
+
         } catch (\Exception $exception) {
             return ResponseHelper::error($exception->getMessage());
         }
