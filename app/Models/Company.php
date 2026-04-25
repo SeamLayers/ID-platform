@@ -33,6 +33,11 @@ class Company extends Model implements HasMedia
         'deleted_at' => 'datetime',
     ];
 
+    public function scopeNotDeleted($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
+
     /**
      * =========================
      * Relations

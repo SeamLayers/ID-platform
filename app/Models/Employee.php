@@ -14,7 +14,7 @@ class Employee extends Model implements HasMedia
     use HasFactory, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
-        'company_id','branch_id','role_id','department_id',
+        'company_id','branch_id','role_id','department_id','user_id',
         'employee_number','iqama_number',
         'name','email','phone','status'
     ];
@@ -53,6 +53,6 @@ class Employee extends Model implements HasMedia
     }
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'user_id');
     }
 }

@@ -21,16 +21,53 @@ class RolesAndPermissionsSeeder extends Seeder
         */
 
         $permissions = [
-            // Company CRUD
+
+            // =========================
+            // Company
+            // =========================
             'company.view',
             'company.create',
             'company.update',
             'company.delete',
 
-            // Dashboards
-            'dashboard.superadmin',
-            'dashboard.owner',
-            'dashboard.employee',
+            // =========================
+            // Company Branch
+            // =========================
+            'company_branch.view',
+            'company_branch.create',
+            'company_branch.update',
+            'company_branch.delete',
+
+            // =========================
+            // Department
+            // =========================
+            'department.view',
+            'department.create',
+            'department.update',
+            'department.delete',
+
+            // =========================
+            // Employee
+            // =========================
+            'employee.view',
+            'employee.create',
+            'employee.update',
+            'employee.delete',
+
+            // =========================
+            // Project
+            // =========================
+            'project.view',
+            'project.create',
+            'project.update',
+            'project.delete',
+
+            // =========================
+            // Employee Project (Pivot)
+            // =========================
+            'employee_project.view',
+            'employee_project.create',
+            'employee_project.delete',
         ];
 
         foreach ($permissions as $permission) {
@@ -45,27 +82,67 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
         $owner      = Role::firstOrCreate(['name' => 'owner']);
+        $manager    = Role::firstOrCreate(['name' => 'manager']);
         $employee   = Role::firstOrCreate(['name' => 'employee']);
 
         /*
         |--------------------------------------------------------------------------
-        | Assign Permissions to Roles
+        | Role Permissions
         |--------------------------------------------------------------------------
         */
 
         // Superadmin → full access
         $superadmin->syncPermissions($permissions);
 
-        // Owner → only company management (no delete if you want restriction)
+        // Owner → company-level control (no delete restriction optional)
         $owner->syncPermissions([
             'company.view',
             'company.update',
-            'dashboard.owner',
+
+            'company_branch.view',
+            'company_branch.create',
+            'company_branch.update',
+
+            'department.view',
+            'department.create',
+            'department.update',
+
+            'employee.view',
+            'employee.create',
+            'employee.update',
+
+            'project.view',
+            'project.create',
+            'project.update',
+
+            'employee_project.view',
+            'employee_project.create',
         ]);
 
-        // Employee → minimal access (mobile)
+        // Manager → operational access
+        $manager->syncPermissions([
+            'company_branch.view',
+
+            'department.view',
+
+            'employee.view',
+            'employee.update',
+
+            'project.view',
+            'project.update',
+
+            'employee_project.view',
+            'employee_project.create',
+        ]);
+
+        // Employee → read-only access
         $employee->syncPermissions([
-            'dashboard.employee',
+            'company.view',
+            'company_branch.view',
+            'department.view',
+            'employee.view',
+            'project.view',
+            'employee_project.view',
         ]);
     }
 }

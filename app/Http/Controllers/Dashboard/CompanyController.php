@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
+use App\Http\Helpers\ResponseHelper;
+use App\Http\Resources\CompanyResource;
 use App\Models\Company;
 use App\Http\Requests\CompanyRequest;
 
@@ -11,10 +13,25 @@ class CompanyController extends Controller
      * List all companies
      */
 
+    public function __construct()
+    {
+        $this->middleware('permission:company.view')->only(['index', 'show']);
+        $this->middleware('permission:company.create')->only(['store']);
+        $this->middleware('permission:company.update')->only(['update']);
+        $this->middleware('permission:company.delete')->only(['destroy']);
+    }
+
     public function index()
     {
-        return response()->json(
-            Company::latest()->paginate(10)
+        $companies = Company::notDeleted()->with([
+            'owner',
+            'employees',
+            'branches'
+        ])->latest()->paginate(10);
+
+        return ResponseHelper::success(
+            CompanyResource::collection($companies),
+            __('messages.data_retrieved')
         );
     }
 
@@ -23,28 +40,36 @@ class CompanyController extends Controller
      */
     public function store(CompanyRequest $request)
     {
-        $company = Company::create($request->validated());
+        $data = $request->validated();
+
+        unset($data['logo']); // remove file from DB insert
+        $data['user_id'] = $request->user_id;
+        $company = Company::create($data);
 
         // Upload logo
         if ($request->hasFile('logo')) {
             $company->addMediaFromRequest('logo')
                 ->toMediaCollection('company_logo');
         }
-
-        return response()->json([
-            'message' => 'Company created successfully',
-            'data' => $company
-        ], 201);
+        return ResponseHelper::success(
+            $company->load(['owner', 'employees', 'branches']),
+            __('messages.data_saved'),
+            201
+        );
     }
 
     /**
      * Show single company
      */
-    public function show($id)
+    public function show()
     {
-        $company = Company::findOrFail($id);
+        $company = Company::with([
+            'owner',
+            'employees',
+            'branches'
+        ])->where('user_id',auth()->id())->first();
 
-        return response()->json($company);
+        return ResponseHelper::success($company->load(['owner', 'employees', 'branches']), __('messages.data_retrieved'), 201);
     }
 
     /**
@@ -63,23 +88,14 @@ class CompanyController extends Controller
             $company->addMediaFromRequest('logo')
                 ->toMediaCollection('company_logo');
         }
-
-        return response()->json([
-            'message' => 'Company updated successfully',
-            'data' => $company
-        ]);
+        return ResponseHelper::success($company,__('messages.data_updated'));
     }
 
-    /**
-     * Soft delete
-     */
     public function destroy($id)
     {
         $company = Company::findOrFail($id);
         $company->delete();
+        return ResponseHelper::success($company,__('messages.data_deleted'));
 
-        return response()->json([
-            'message' => 'Company deleted successfully'
-        ]);
     }
 }

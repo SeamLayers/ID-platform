@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -55,17 +56,10 @@ class AuthenticatedSessionController extends Controller
 
         // Create API token
         $token = $user->createToken('api-token')->plainTextToken;
-
-        return ResponseHelper::success([
-            'user' => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'roles' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name'),
-            ],
-            'token' => $token,
-        ], __('messages.login_success'));
+        $user->token = $token;
+        $user->roles_name = $user->getRoleNames();
+        $user->permissons = $user->getAllPermissions()->pluck('name');
+        return ResponseHelper::success(new UserResource($user), __('messages.login_success'));
     }
 
     /**
