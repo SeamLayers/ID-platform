@@ -18,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules;
@@ -35,41 +36,46 @@ class RegisteredUserController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'email', 'max:255', 'unique:employees,email'],
+            $validated = $request->validate([
+                'name'     => ['required', 'string', 'max:255'],
+                'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
                 'password' => ['required', 'confirmed', Rules\Password::defaults()],
-                'sex' => ['required', 'in:male,female'],
-                'material_status' => ['required', 'in:married,single'],
-                'phone' => ['required', 'string', 'max:15'],
-                'country_code' => ['required', 'string', 'max:5'],
-                'device_token' => ['required', 'string'],
-                'Identity_number' => ['required', 'integer'],
+                'user_type' => ['required','in:owner,employee,superadmin'],
             ]);
+
+            DB::beginTransaction();
 
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'name'       => $validated['name'],
+                'email'      => $validated['email'],
+                'password'   => Hash::make($validated['password']),
                 'ip_address' => $request->ip(),
-                'sex' => $request->sex,
-                'material_status' => $request->material_status,
-                'phone' => $request->phone,
-                'country_code' => $request->country_code,
-                'device_token' => $request->device_token,
-                'Identity_number' => $request->Identity_number,
+                'user_type'  => $validated['user_type'], // default
             ]);
 
-            $user->token = $user->createToken('api-token')->plainTextToken;
+
+
+            $user->assignRole($validated['user_type']);
+
+            /*
+            |----------------------------------------
+            | Token
+            |----------------------------------------
+            */
+            $token = $user->createToken('api-token')->plainTextToken;
 
             event(new Registered($user));
 
-            Auth::login($user);
+            DB::commit();
 
-            return ResponseHelper::success($user, __('messages.register_success'));
+            return ResponseHelper::success([
+                'user'  => $user,
+                'token' => $token,
+            ], __('messages.register_success'));
 
-        } catch (\Exception $exception) {
-            return ResponseHelper::error($exception->getMessage());
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e->getMessage());
         }
     }
 

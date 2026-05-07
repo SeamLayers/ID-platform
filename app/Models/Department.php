@@ -20,6 +20,10 @@ class Department extends Model
         'deleted_at' => 'datetime',
     ];
 
+    public function scopeNotDeleted($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
     /**
      * =========================
      * Relationships

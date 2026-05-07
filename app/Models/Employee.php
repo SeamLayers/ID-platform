@@ -19,7 +19,10 @@ class Employee extends Model implements HasMedia
         'name','email','phone','status'
     ];
 
-
+    public function scopeNotDeleted($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
     /**
      * Register media collections
      */

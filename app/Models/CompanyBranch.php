@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CompanyBranch extends Model
 {
@@ -15,6 +16,7 @@ class CompanyBranch extends Model
         'company_id',
         'name',
         'address',
+        'deleted_at'
     ];
 
     protected $casts = [
@@ -32,6 +34,11 @@ class CompanyBranch extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function scopeNotDeleted($query)
+    {
+        return $query->whereNull('deleted_at');
     }
 
     /*

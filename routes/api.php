@@ -13,7 +13,12 @@ use App\Http\Controllers\Setting\{
     SettingController
 };
 use \App\Http\Controllers\Dashboard\{
-    CompanyController
+    CompanyController,
+    CompanyBranchController,
+    ProjectController,
+    EmployeeProjectController,
+    EmployeeController,
+    DepartmentController
 };
 
 
@@ -25,7 +30,6 @@ Route::prefix('v1')->group( function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('auth')->name('api.v1.auth.')->group(function () {
-        Route::post('register', [RegisteredUserController::class, 'store'])->name('register');
         Route::post('login', [AuthenticatedSessionController::class, 'login'])->name('login');
         Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
         Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
@@ -39,20 +43,64 @@ Route::prefix('v1')->group( function () {
         });
     });
 
-    Route::prefix('dashboard')->name('api.v1.auth.')->group(function () {
-        Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function  () {
-                Route::apiResource('company', CompanyController::class);
-        });
-        Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
-            Route::get('owner/company', [CompanyController::class, 'show']);
-        });
-    });
-    Route::prefix('mobile')->name('api.v1.auth.')->group(function () {
-        Route::middleware(['auth', 'role:employee'])->group(function () {
-            Route::get('/employee', fn () => 'Employee panel');
-        });
-    });
+    Route::name('api.v1.auth.')->group(function () {
 
+        /*
+        |----------------------------------------
+        | Dashboard (Web / Admin)
+        |----------------------------------------
+        */
+        Route::prefix('dashboard')
+            ->middleware('auth:sanctum')
+            ->group(function () {
+                /*
+                |-------------------------------
+                | Super Admin Routes
+                |-------------------------------
+                */
+                Route::middleware('role:superadmin')->group(function () {
+                    Route::apiResource('company', CompanyController::class);
+                });
+
+                /*
+                |-------------------------------
+                | Owner Routes   - have account company in id plus
+                |-------------------------------
+                */
+                Route::middleware('role:owner')->group(function () {
+                    Route::get('owner/company', [CompanyController::class, 'show']);
+                });
+
+                /*
+                |-------------------------------
+                | مشتركة (Superadmin + Owner)
+                |-------------------------------
+                */
+                Route::middleware('role:superadmin|owner')->group(function () {
+                    Route::apiResources([
+                        'company-branch'   => CompanyBranchController::class,
+                        'department'       => DepartmentController::class,
+                        'employee'         => EmployeeController::class,
+                        'project'          => ProjectController::class,
+                        'employee-project' => EmployeeProjectController::class,
+                    ]);
+                    Route::post('register', [RegisteredUserController::class, 'store'])->name('register');
+
+                });
+            });
+
+        /*
+        |----------------------------------------
+        | Mobile (Employee)
+        |----------------------------------------
+        */
+        Route::prefix('mobile')
+            ->middleware(['auth', 'role:employee'])
+            ->group(function () {
+                Route::get('/employee', fn () => 'Employee panel');
+            });
+
+    });
 
 
     Route::get('privacy-policy', [SettingController::class, 'privacy']);
