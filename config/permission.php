@@ -101,7 +101,7 @@ return [
     ],
 
     'defaults' => [
-        'guard' => 'api',
+        'guard' => 'web',
     ],
 
     /*
