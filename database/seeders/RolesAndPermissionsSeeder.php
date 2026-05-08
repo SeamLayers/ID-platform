@@ -71,7 +71,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission,  'guard_name' => 'web']);
+            Permission::firstOrCreate(['name' => $permission,  'guard_name' => 'api']);
         }
 
         /*
@@ -80,10 +80,25 @@ class RolesAndPermissionsSeeder extends Seeder
         |--------------------------------------------------------------------------
         */
 
-        $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
-        $owner      = Role::firstOrCreate(['name' => 'owner']);
-        $manager    = Role::firstOrCreate(['name' => 'manager']);
-        $employee   = Role::firstOrCreate(['name' => 'employee']);
+        $superadmin = Role::firstOrCreate([
+            'name' => 'superadmin',
+            'guard_name' => 'api',
+        ]);
+
+        $owner = Role::firstOrCreate([
+            'name' => 'owner',
+            'guard_name' => 'api',
+        ]);
+
+        $manager = Role::firstOrCreate([
+            'name' => 'manager',
+            'guard_name' => 'api',
+        ]);
+
+        $employee = Role::firstOrCreate([
+            'name' => 'employee',
+            'guard_name' => 'api',
+        ]);
 
         /*
         |--------------------------------------------------------------------------
