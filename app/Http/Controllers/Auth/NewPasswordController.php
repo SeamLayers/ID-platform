@@ -9,10 +9,9 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rules\Password;
 
 class NewPasswordController extends Controller
 {
@@ -26,11 +25,17 @@ class NewPasswordController extends Controller
      */
     public function store(Request $request)
     {
-        // 1️⃣ Validate input
+        // 1️⃣ Validate input.
+        //
+        // Use the validation `Password` rule (Illuminate\Validation\Rules\Password),
+        // not the `Password` facade (Illuminate\Support\Facades\Password).
+        // The facade fronts the password broker and doesn't expose `defaults()`
+        // — referencing it caused a runtime "Call to undefined method
+        // PasswordBroker::defaults()" error.
         $validator = Validator::make($request->all(), [
             'otp'      => ['required'],
-            'email'    => ['required','email','exists:users,email'],
-            'password' => ['required','confirmed', Password::defaults()],
+            'email'    => ['required', 'email', 'exists:users,email'],
+            'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
         if ($validator->fails()) {
