@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use App\Models\Advertisement;
-use App\Models\AdvertisementContracts;
-use App\Observers\AdvertisementContractObserver;
-use App\Observers\AdvertisementObserver;
+
+use App\Contracts\ValidationTranslatorInterface;
+use App\Services\ValidationTranslatorService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -17,7 +17,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            ValidationTranslatorInterface::class,
+            ValidationTranslatorService::class
+        );
     }
 
     /**
@@ -26,5 +29,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        Gate::before(function ($user) {
+            return $user->hasRole('superadmin') ? true : null;
+        });
+
     }
 }

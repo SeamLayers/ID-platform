@@ -40,11 +40,7 @@ class CompanyBranchController extends Controller
     {
         $branch = CompanyBranch::create($request->validated());
 
-        return ResponseHelper::success(
-            $branch->load('company'),
-            __('messages.data_saved'),
-            201
-        );
+        return ResponseHelper::success($branch->load('company'), __('messages.data_saved'), 201);
     }
 
     /**
