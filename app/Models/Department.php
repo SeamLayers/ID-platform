@@ -14,6 +14,7 @@ class Department extends Model
         'company_id',
         'name',
         'code',
+        'branch_id'
     ];
 
     protected $casts = [
@@ -38,5 +39,9 @@ class Department extends Model
     public function employees()
     {
         return $this->hasMany(Employee::class, 'department_id');
+    }
+    public function branch()
+    {
+        return $this->belongsTo(CompanyBranch::class, 'branch_id');
     }
 }

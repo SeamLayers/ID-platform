@@ -16,7 +16,7 @@ use \App\Http\Controllers\Dashboard\{
     CompanyController,
     CompanyBranchController,
     ProjectController,
-    EmployeeProjectController,
+    RolesController,
     EmployeeController,
     DepartmentController
 };
@@ -60,6 +60,7 @@ Route::prefix('v1')->group( function () {
                 */
                 Route::middleware('role:superadmin')->group(function () {
                     Route::apiResource('company', CompanyController::class);
+
                 });
 
                 /*
@@ -81,9 +82,10 @@ Route::prefix('v1')->group( function () {
                         'company-branch'   => CompanyBranchController::class,
                         'department'       => DepartmentController::class,
                         'employee'         => EmployeeController::class,
-                        'project'          => ProjectController::class,
-                        'employee-project' => EmployeeProjectController::class,
+                        'project'          => ProjectController::class
                     ]);
+                    Route::apiResource('roles', RolesController::class);
+                    Route::post('roles/{role}/users', [RolesController::class, 'assignUsers']);
                     Route::post('register', [RegisteredUserController::class, 'store'])->name('register');
 
                 });

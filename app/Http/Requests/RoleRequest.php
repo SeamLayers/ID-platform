@@ -8,8 +8,9 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class ProjectRequest extends FormRequest
+class RoleRequest extends FormRequest
 {
+
 
     public function __construct(
         protected ValidationTranslatorInterface $translator
@@ -17,25 +18,19 @@ class ProjectRequest extends FormRequest
     {
         parent::__construct();
     }
-
-
     public function authorize(): bool
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
-            'company_id'   => 'required|exists:companies,id',
-            'name'         => 'required|string|max:255',
-            'start_date'   => 'required|date',
-            'end_date'     => 'required|date|after_or_equal:start_date',
-
-            'employee_ids'   => 'required|array',
-            'employee_ids.*' => 'exists:employees,id',
+            'name' => 'required|string|max:255|unique:roles,name',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'nullable',
         ];
     }
+
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(

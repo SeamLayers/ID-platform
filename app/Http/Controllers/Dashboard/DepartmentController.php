@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
+use App\Http\Helpers\ResponseHelper;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Http\Requests\DepartmentRequest;

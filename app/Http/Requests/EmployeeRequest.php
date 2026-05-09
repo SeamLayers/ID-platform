@@ -2,10 +2,22 @@
 
 namespace App\Http\Requests;
 
+use App\Contracts\ValidationTranslatorInterface;
+use App\Http\Helpers\ResponseHelper;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class EmployeeRequest extends FormRequest
 {
+
+
+    public function __construct(
+        protected ValidationTranslatorInterface $translator
+    )
+    {
+        parent::__construct();
+    }
     public function authorize(): bool
     {
         return true;
@@ -16,19 +28,29 @@ class EmployeeRequest extends FormRequest
         return [
             'company_id'     => 'required|exists:companies,id',
             'branch_id'      => 'required|exists:company_branches,id',
-            'role_id'        => 'nullable|exists:roles,id',
-            'department_id'   => 'nullable|exists:departments,id',
+            'role_id'        => 'required|exists:roles,id',
+            'department_id'   => 'required|exists:departments,id',
             'user_id'        => 'required|exists:users,id',
 
             'employee_number' => 'required|string|unique:employees,employee_number,' . $this->id,
-            'iqama_number'    => 'nullable|string',
+            'iqama_number'    => 'required|unique:employees,iqama_number',
 
             'name'            => 'required|string|max:255',
-            'email'           => 'nullable|email',
-            'phone'           => 'nullable|string',
-            'status'          => 'nullable|in:active,inactive',
+            'email'           => 'required|email|unique:employees,email',
+            'phone'           => 'required|unique:employees,phone',
+            'status'          => 'required|in:active,inactive',
 
-            'logo'            => 'nullable|file|mimes:jpg,jpeg,png'
+            'logo'            => 'required|file|mimes:jpg,jpeg,png'
         ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(
+            ResponseHelper::success(null,
+                $this->translator->transform($validator),
+                422
+            )
+        );
     }
 }
