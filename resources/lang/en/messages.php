@@ -36,4 +36,21 @@ return [
 
     'logo_required' => 'Logo is required',
     'logo_must_be_image' => 'Logo must be an image file',
+
+
+    'employee_not_found' => 'Employee not found',
+    'template_not_found' => 'Template not found',
+
+    'employee_required' => 'Employee is required',
+    'template_required' => 'Template is required',
+
+    'business_card_submitted' => 'Business card submitted successfully',
+    'business_card_approved'  => 'Business card approved successfully',
+    'business_card_rejected'  => 'Business card rejected successfully',
+    'business_card_published' => 'Business card published successfully',
+    'business_card_deactivated' => 'Business card deactivated successfully',
+
+    'business_card_must_be_approved' => 'Business card must be approved before publishing',
+
+    'employee_business_card_exists' => 'Employee already has a business card',
 ];

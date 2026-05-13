@@ -46,8 +46,24 @@ return [
 
     'logo_required' => 'الشعار مطلوب',
     'logo_must_be_image' => 'يجب أن يكون الشعار صورة',
-    'data_deleted' => 'تم حذف البيانات بنجاح',
-    'data_updated' => 'تم تحديث البيانات بنجاح',
+
+
+    'employee_not_found' => 'الموظف غير موجود',
+    'template_not_found' => 'القالب غير موجود',
+
+    'employee_required' => 'الموظف مطلوب',
+    'template_required' => 'القالب مطلوب',
+
+    'business_card_submitted' => 'تم تقديم بطاقة العمل بنجاح',
+    'business_card_approved'  => 'تمت الموافقة على بطاقة العمل',
+    'business_card_rejected'  => 'تم رفض بطاقة العمل',
+    'business_card_published' => 'تم نشر بطاقة العمل',
+    'business_card_deactivated' => 'تم إيقاف بطاقة العمل',
+
+    'business_card_must_be_approved' => 'يجب اعتماد البطاقة قبل النشر',
+
+    'employee_business_card_exists' => 'الموظف لديه بطاقة عمل بالفعل',
+
 ];
 
 

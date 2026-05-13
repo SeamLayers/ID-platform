@@ -14,6 +14,7 @@ class BusinessCard extends Model
         'qr_code',
         'nfc_code',
         'public_url',
+        'expiry_public_url',
         'is_active',
 
         // 🔥 NEW (workflow)
@@ -50,6 +51,11 @@ class BusinessCard extends Model
     public function reviewer()
     {
         return $this->belongsTo(Employee::class, 'reviewed_by');
+    }
+
+    public function interactions()
+    {
+        return $this->hasMany(CardInteraction::class);
     }
 
     /*

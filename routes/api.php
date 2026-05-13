@@ -18,7 +18,9 @@ use \App\Http\Controllers\Dashboard\{
     ProjectController,
     RolesController,
     EmployeeController,
-    DepartmentController
+    DepartmentController,
+    BusinessCardController,
+    BusinessCardTemplateController
 };
 
 
@@ -82,12 +84,18 @@ Route::prefix('v1')->group( function () {
                         'company-branch'   => CompanyBranchController::class,
                         'department'       => DepartmentController::class,
                         'employee'         => EmployeeController::class,
-                        'project'          => ProjectController::class
+                        'project'          => ProjectController::class,
+                        'business-cards-templates'          => BusinessCardTemplateController::class,
+                        'business-cards'          => BusinessCardController::class
                     ]);
                     Route::apiResource('roles', RolesController::class);
                     Route::post('roles/{role}/users', [RolesController::class, 'assignUsers']);
                     Route::post('register', [RegisteredUserController::class, 'store'])->name('register');
-
+                    Route::post('business-cards/{id}/submit', [BusinessCardController::class, 'submit']);
+                    Route::post('business-cards/{id}/publish', [BusinessCardController::class, 'publish']);
+                    Route::post('business-cards/{id}/deactivate', [BusinessCardController::class, 'deactivate']);
+                    Route::post('business-cards/{id}/track', [BusinessCardController::class, 'track']);
+                    Route::post('business-cards/{id}/analytics', [BusinessCardController::class, 'analytics']);
                 });
             });
 
@@ -97,9 +105,12 @@ Route::prefix('v1')->group( function () {
         |----------------------------------------
         */
         Route::prefix('mobile')
-            ->middleware(['auth', 'role:employee'])
+            ->middleware(['auth', 'role:superadmin|employee'])
             ->group(function () {
-                Route::get('/employee', fn () => 'Employee panel');
+                // Workflow
+                Route::post('business-cards/{id}/approve', [BusinessCardController::class, 'approve']);
+                Route::post('business-cards/{id}/reject', [BusinessCardController::class, 'reject']);
+
             });
 
     });

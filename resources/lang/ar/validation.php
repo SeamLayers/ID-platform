@@ -26,21 +26,33 @@ return [
         'price'             => 'السعر',
         'password'          => 'كلمة المرور',
         'device_token'      => 'رمز الجهاز',
-        'company_id'       => 'الشركة',
-        'branch_id'        => 'الفرع',
-        'role_id'          => 'الدور',
-        'department_id'    => 'القسم',
-        'user_id'          => 'المستخدم',
-        'employee_number'  => 'الرقم الوظيفي',
-        'iqama_number'     => 'رقم الإقامة',
-        'name'             => 'الاسم',
-        'email'            => 'البريد الإلكتروني',
-        'phone'            => 'رقم الهاتف',
-        'status'           => 'الحالة',
-        'logo'             => 'الشعار',
-        'code'             => 'الرقم التعريفى',
-        'employee_ids'     => 'الموظفين',
-        'permissions'      => 'الصلاحيات'
+
+        'company_id'        => 'الشركة',
+        'branch_id'         => 'الفرع',
+        'role_id'           => 'الدور',
+        'department_id'     => 'القسم',
+        'user_id'           => 'المستخدم',
+
+        'employee_number'   => 'الرقم الوظيفي',
+        'employee_id'       => 'الموظف',
+        'employee_ids'      => 'الموظفين',
+
+        'iqama_number'      => 'رقم الإقامة',
+        'name'              => 'الاسم',
+        'email'             => 'البريد الإلكتروني',
+        'phone'             => 'رقم الهاتف',
+        'status'            => 'الحالة',
+
+        'logo'              => 'الشعار',
+        'code'              => 'الرقم التعريفي',
+
+        'template_id'       => 'القالب',
+        'nfc_code'          => 'رمز NFC',
+        'public_url'        => 'الرابط العام',
+        'expiry_public_url' => 'تاريخ انتهاء الرابط',
+        'card_data_json'    => 'بيانات بطاقة العمل',
+
+        'permissions'       => 'الصلاحيات',
     ],
 
     'custom' => [

@@ -32,30 +32,40 @@ return [
 
     'attributes' => [
 
-        'address'           => 'address',
-        'user_type'         => 'user type',
-        'category_id'       => 'category',
-        'price'             => 'price',
-        'password'          => 'password',
-        'device_token'      => 'device token',
+        'address'           => 'Address',
+        'user_type'         => 'User Type',
+        'category_id'       => 'Category',
+        'price'             => 'Price',
+        'password'          => 'Password',
+        'device_token'      => 'Device Token',
 
-        'company_id'       => 'company',
-        'branch_id'        => 'branch',
-        'role_id'          => 'role',
-        'department_id'    => 'department',
-        'user_id'          => 'user',
-        'employee_number'  => 'employee number',
-        'iqama_number'     => 'iqama number',
-        'name'             => 'name',
-        'email'            => 'email',
-        'phone'            => 'phone',
-        'status'           => 'status',
-        'logo'             => 'logo',
-        'code'             => 'code',
-        'employee_ids'             => 'employee_ids',
-        'permissions'             => 'permissions',
+        'company_id'        => 'Company',
+        'branch_id'         => 'Branch',
+        'role_id'           => 'Role',
+        'department_id'     => 'Department',
+        'user_id'           => 'User',
+
+        'employee_number'   => 'Employee Number',
+        'employee_id'       => 'Employee',
+        'employee_ids'      => 'Employees',
+
+        'iqama_number'      => 'Iqama Number',
+        'name'              => 'Name',
+        'email'             => 'Email',
+        'phone'             => 'Phone',
+        'status'            => 'Status',
+
+        'logo'              => 'Logo',
+        'code'              => 'Code',
+
+        'template_id'       => 'Template',
+        'nfc_code'          => 'NFC Code',
+        'public_url'        => 'Public URL',
+        'expiry_public_url' => 'Public URL Expiry Date',
+        'card_data_json'    => 'Business Card Data',
+
+        'permissions'       => 'Permissions',
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Custom Rules (ONLY when needed)
