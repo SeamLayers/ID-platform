@@ -18,6 +18,7 @@ use \App\Http\Controllers\Dashboard\{
     ProjectController,
     RolesController,
     EmployeeController,
+    EmployeeProjectController,
     DepartmentController,
     BusinessCardController,
     BusinessCardTemplateController
@@ -86,6 +87,10 @@ Route::prefix('v1')->group( function () {
                         'department'       => DepartmentController::class,
                         'employee'         => EmployeeController::class,
                         'project'          => ProjectController::class,
+                        // Restored — dashboard's /assignments page needs
+                        // this. Was accidentally dropped from the list
+                        // during the business-cards additions.
+                        'employee-project' => EmployeeProjectController::class,
                         'business-cards-templates'          => BusinessCardTemplateController::class,
                         'business-cards'          => BusinessCardController::class
                     ]);
