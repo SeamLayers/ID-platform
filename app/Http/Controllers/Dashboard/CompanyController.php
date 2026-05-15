@@ -59,17 +59,36 @@ class CompanyController extends Controller
     }
 
     /**
-     * Show single company
+     * Show single company.
+     *
+     * Routed two ways:
+     *   - Superadmin: GET /dashboard/company/{id}    (apiResource — $id is the company id)
+     *   - Owner:      GET /dashboard/owner/company   (no parameter — resolve by auth user)
+     *
+     * Returns 404 if the owner isn't linked to a company yet so the
+     * dashboard's "My Company" page can render its empty state instead of
+     * 500-ing on `null->load()`.
      */
-    public function show()
+    public function show($id = null)
     {
-        $company = Company::with([
-            'owner',
-            'employees',
-            'branches'
-        ])->where('user_id',auth()->id())->first();
+        $query = Company::with(['owner', 'employees', 'branches']);
 
-        return ResponseHelper::success($company->load(['owner', 'employees', 'branches']), __('messages.data_retrieved'), 201);
+        $company = $id !== null
+            ? $query->find($id)
+            : $query->where('user_id', auth()->id())->first();
+
+        if (! $company) {
+            return ResponseHelper::error(
+                __('messages.company_not_found'),
+                null,
+                404
+            );
+        }
+
+        return ResponseHelper::success(
+            new CompanyResource($company),
+            __('messages.data_retrieved')
+        );
     }
 
     /**

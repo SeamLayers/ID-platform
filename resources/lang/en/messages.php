@@ -31,6 +31,7 @@ return [
 
     'user_required' => 'User is required',
     'user_not_found' => 'Selected user must be a valid owner',
+    'company_not_found' => 'No company is linked to your account yet.',
 
     'email_already_exists' => 'Email already exists',
 
