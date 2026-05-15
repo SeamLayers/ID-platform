@@ -108,6 +108,13 @@ Route::prefix('v1')->group( function () {
         Route::prefix('mobile')
             ->middleware(['auth', 'role:superadmin|employee'])
             ->group(function () {
+                // Read — reviewer queue. The dashboard list at
+                // /dashboard/business-cards is gated to superadmin|owner,
+                // so mobile employees with `business_card.view` need a
+                // mobile-scoped read route.
+                Route::get('business-cards', [BusinessCardController::class, 'index']);
+                Route::get('business-cards/{id}', [BusinessCardController::class, 'show']);
+
                 // Workflow
                 Route::post('business-cards/{id}/approve', [BusinessCardController::class, 'approve']);
                 Route::post('business-cards/{id}/reject', [BusinessCardController::class, 'reject']);
