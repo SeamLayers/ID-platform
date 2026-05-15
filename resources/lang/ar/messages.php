@@ -64,6 +64,8 @@ return [
 
     'employee_business_card_exists' => 'الموظف لديه بطاقة عمل بالفعل',
 
+    'business_card_unavailable' => 'هذه البطاقة لم تعد متاحة.',
+
 ];
 
 

@@ -68,6 +68,35 @@ class RolesAndPermissionsSeeder extends Seeder
             'employee_project.view',
             'employee_project.create',
             'employee_project.delete',
+
+            // =========================
+            // Business Card
+            // =========================
+            'business_card.view',
+            'business_card.create',
+            'business_card.update',
+            'business_card.delete',
+            'business_card.submit',
+            'business_card.approve',
+            'business_card.reject',
+            'business_card.publish',
+            'business_card.deactivate',
+
+            // =========================
+            // Business Card Template
+            // =========================
+            'business_card_template.view',
+            'business_card_template.create',
+            'business_card_template.update',
+            'business_card_template.delete',
+
+            // =========================
+            // Role management
+            // =========================
+            'role.view',
+            'role.create',
+            'role.update',
+            'role.delete',
         ];
 
         foreach ($permissions as $permission) {
@@ -132,6 +161,24 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'employee_project.view',
             'employee_project.create',
+
+            // Owners can issue, edit, submit, publish and retire cards for
+            // their company's employees. Approval/rejection are explicitly
+            // delegated to the mobile reviewer role (employee with the
+            // approve/reject permissions) so the owner doesn't self-approve.
+            'business_card.view',
+            'business_card.create',
+            'business_card.update',
+            'business_card.submit',
+            'business_card.publish',
+            'business_card.deactivate',
+
+            'business_card_template.view',
+            'business_card_template.create',
+            'business_card_template.update',
+            'business_card_template.delete',
+
+            'role.view',
         ]);
 
         // Manager → operational access
@@ -148,9 +195,16 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'employee_project.view',
             'employee_project.create',
+
+            'business_card.view',
+            'business_card.update',
+            'business_card.submit',
+            'business_card_template.view',
         ]);
 
-        // Employee → read-only access
+        // Employee → read-only access + mobile card review.
+        // The approve/reject endpoints live under /mobile/* and are the only
+        // mutating operations an employee can perform.
         $employee->syncPermissions([
             'company.view',
             'company_branch.view',
@@ -158,6 +212,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'employee.view',
             'project.view',
             'employee_project.view',
+
+            'business_card.view',
+            'business_card.approve',
+            'business_card.reject',
         ]);
     }
 }

@@ -22,6 +22,7 @@ use \App\Http\Controllers\Dashboard\{
     BusinessCardController,
     BusinessCardTemplateController
 };
+use App\Http\Controllers\Public\PublicCardController;
 
 
 Route::prefix('v1')->group( function () {
@@ -120,6 +121,17 @@ Route::prefix('v1')->group( function () {
     Route::get('global-constants', [SettingController::class, 'GlobalConstants']);
     Route::get('terms-conditions', [SettingController::class, 'terms']);
     Route::get('contact-us', [SettingController::class, 'contact']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public Business Cards (no auth) — landing page consumes these.
+    |
+    |   GET  /cards/{public_url}        → render one published card
+    |   POST /cards/{public_url}/track  → fire-and-forget interaction tracking
+    |--------------------------------------------------------------------------
+    */
+    Route::get('cards/{public_url}', [PublicCardController::class, 'show']);
+    Route::post('cards/{public_url}/track', [PublicCardController::class, 'track']);
 
 
 

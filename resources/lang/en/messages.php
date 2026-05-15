@@ -53,4 +53,6 @@ return [
     'business_card_must_be_approved' => 'Business card must be approved before publishing',
 
     'employee_business_card_exists' => 'Employee already has a business card',
+
+    'business_card_unavailable' => 'This business card is no longer available.',
 ];
