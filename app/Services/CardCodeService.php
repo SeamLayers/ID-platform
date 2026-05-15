@@ -29,6 +29,7 @@ class CardCodeService
 
 
 
+
     /**
      * Generate public URL slug
      */
