@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
-use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -19,29 +19,13 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
 
-
-    /**
-     * Login
-     */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email'        => 'required|email',
-            'password'     => 'required|string',
-            'device_token' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return ResponseHelper::error(
-                __('messages.validation_failed'),
-                $validator->errors(),
-                422
-            );
-        }
+        $user = User::where('email', $validated['email'])->first();
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return ResponseHelper::error(
                 __('messages.invalid_credentials'),
                 null,
@@ -49,17 +33,38 @@ class AuthenticatedSessionController extends Controller
             );
         }
 
-        // Update device token safely
+        if ($user->expire_password && $user->expire_password < now()) {
+            return ResponseHelper::error(
+                __('messages.password_expired'),
+                null,
+                401
+            );
+        }
+
+        if (!Hash::check($validated['password'], $user->password)) {
+            return ResponseHelper::error(
+                __('messages.invalid_credentials'),
+                null,
+                401
+            );
+        }
+
         $user->update([
-            'device_token' => $request->device_token
+            'device_token'    => $validated['device_token'],
+            'expire_password' => null,
+            'is_login_active' => 1,
         ]);
 
-        // Create API token
         $token = $user->createToken('api-token')->plainTextToken;
+
         $user->token = $token;
         $user->roles_name = $user->getRoleNames();
-        $user->permissons = $user->getAllPermissions()->pluck('name');
-        return ResponseHelper::success(new UserResource($user), __('messages.login_success'));
+        $user->permissions = $user->getAllPermissions()->pluck('name');
+
+        return ResponseHelper::success(
+            new UserResource($user),
+            __('messages.login_success')
+        );
     }
 
     /**
@@ -74,5 +79,4 @@ class AuthenticatedSessionController extends Controller
             __('messages.logout_success')
         );
     }
-
 }

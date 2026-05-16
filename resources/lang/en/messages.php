@@ -56,4 +56,5 @@ return [
     'employee_business_card_exists' => 'Employee already has a business card',
 
     'business_card_unavailable' => 'This business card is no longer available.',
+    'password_expired' => 'Your password has expired. Please reset your password to continue.',
 ];

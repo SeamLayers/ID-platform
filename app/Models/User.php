@@ -39,6 +39,8 @@ class User extends Authenticatable implements AuditableContract
         'device_token', // FCM/APNs token persisted on each login.
         'phone',
         'ip_address',
+        'expire_password',
+        'is_login_active'
     ];
 
     const TYPE_SUPERADMIN = 'superadmin';

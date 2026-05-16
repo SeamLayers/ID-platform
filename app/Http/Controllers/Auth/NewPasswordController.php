@@ -4,51 +4,22 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Models\User;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Models\VerificationCode;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password;
 
 class NewPasswordController extends Controller
 {
     /**
-     * Handle an incoming new password request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
-    /**
      * Reset user password via OTP
      */
-    public function store(Request $request)
+    public function store(ResetPasswordRequest $request)
     {
-        // 1️⃣ Validate input.
-        //
-        // Use the validation `Password` rule (Illuminate\Validation\Rules\Password),
-        // not the `Password` facade (Illuminate\Support\Facades\Password).
-        // The facade fronts the password broker and doesn't expose `defaults()`
-        // — referencing it caused a runtime "Call to undefined method
-        // PasswordBroker::defaults()" error.
-        $validator = Validator::make($request->all(), [
-            'otp'      => ['required'],
-            'email'    => ['required', 'email', 'exists:users,email'],
-            'password' => ['required', 'confirmed', Password::min(8)],
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return ResponseHelper::error(
-                implode(', ', $validator->errors()->all()),
-                $validator->errors(),
-                422
-            );
-        }
-
-        // 2️⃣ Fetch user
-        $user = User::where('email', $request->email)->first();
-
+        $user = User::where('email', $validated['email'])->first();
         if (!$user) {
             return ResponseHelper::error(
                 __('messages.user_not_found'),
@@ -57,27 +28,8 @@ class NewPasswordController extends Controller
             );
         }
 
-        // 3️⃣ Check OTP match
-        if ($user->reset_otp !== $request->otp) {
-            return ResponseHelper::error(
-                __('messages.invalid_otp'),
-                null,
-                400
-            );
-        }
-
-        // 4️⃣ Check OTP expiration
-        if ($user->otp_expires_at < now()) {
-            return ResponseHelper::error(
-                __('messages.expired_otp'),
-                null,
-                400
-            );
-        }
-
-        // 5️⃣ Reset password
         $user->update([
-            'password'       => Hash::make($request->password),
+            'password'       => Hash::make($validated['password']),
             'reset_otp'      => null,
             'otp_expires_at' => null,
             'remember_token' => Str::random(60),

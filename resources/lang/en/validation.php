@@ -8,7 +8,6 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'required' => 'The :attribute field is required.',
     'numeric'  => 'The :attribute must be a number.',
     'exists'   => 'The selected :attribute is invalid.',
     'in'       => 'The selected :attribute is invalid.',
@@ -17,7 +16,9 @@ return [
     'file'     => 'The :attribute must be a file.',
     'string'   => 'The :attribute must be a valid string.',
     'boolean'  => 'The :attribute field must be true or false.',
-    'unique'  => 'The :attribute field must be unique.',
+    'required' => 'The :attribute field is required.',
+
+    'unique' => 'The :attribute has already been taken.',
 
     'max' => [
         'string' => 'The :attribute may not be greater than :max characters.',
