@@ -26,14 +26,17 @@ class ProjectRequest extends FormRequest
 
     public function rules(): array
     {
+        // start/end dates and employee assignment are optional at creation
+        // time — owners typically scaffold a project and assign members
+        // afterwards via /employee-project.
         return [
-            'company_id'   => 'required|exists:companies,id',
-            'name'         => 'required|string|max:255',
-            'start_date'   => 'required|date',
-            'end_date'     => 'required|date|after_or_equal:start_date',
+            'company_id'     => ['required', 'exists:companies,id'],
+            'name'           => ['required', 'string', 'max:255'],
+            'start_date'     => ['nullable', 'date'],
+            'end_date'       => ['nullable', 'date', 'after_or_equal:start_date'],
 
-            'employee_ids'   => 'required|array',
-            'employee_ids.*' => 'exists:employees,id',
+            'employee_ids'   => ['nullable', 'array'],
+            'employee_ids.*' => ['exists:employees,id'],
         ];
     }
     protected function failedValidation(Validator $validator): void

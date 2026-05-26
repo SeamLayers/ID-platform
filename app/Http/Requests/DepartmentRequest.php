@@ -23,11 +23,19 @@ class DepartmentRequest extends FormRequest
 
     public function rules(): array
     {
+        // Departments often span multiple branches (Engineering, HR, etc.),
+        // so branch_id is captured when relevant but not required. `code`
+        // also matches the dashboard UX (placeholder + hint text both
+        // signal "optional").
+        //
+        // Note: the previous version had a comma-split bug
+        // (`'branch_id' => 'required', 'exists:company_branches,id'`) which
+        // dropped the exists rule and silently forced branch_id required.
         return [
-            'company_id' => 'required|exists:companies,id',
-            'name'       => 'required|string|max:255',
-            'code'       => 'required|string|max:50',
-            'branch_id' => 'required', 'exists:company_branches,id',
+            'company_id' => ['required', 'exists:companies,id'],
+            'name'       => ['required', 'string', 'max:255'],
+            'code'       => ['nullable', 'string', 'max:50'],
+            'branch_id'  => ['nullable', 'exists:company_branches,id'],
         ];
     }
 
