@@ -24,6 +24,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\SendOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Resources\UserResource;
 class RegisteredUserController extends Controller
 {
     /**
@@ -228,8 +229,12 @@ Google Play / Apple Store";
      */
     public function profileData(): JsonResponse
     {
+        // Return the same shape as the login response (minus a fresh token)
+        // so mobile/dashboard clients can reuse their AuthUser parser. The
+        // raw model would leak ip_address / expire_password and omit
+        // roles+permissions, so we wrap it in UserResource.
         return ResponseHelper::success(
-            auth()->user(),
+            new UserResource(auth()->user()),
             __('messages.profile_retrieved')
         );
     }

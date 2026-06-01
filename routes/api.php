@@ -44,6 +44,11 @@ Route::prefix('v1')->group( function () {
         // Authenticated routes
         Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('logout', [AuthenticatedSessionController::class, 'logout'])->name('logout');
+
+            // "Me" endpoint — returns the current user (id/name/email/phone/
+            // user_type/roles/permissions) for any authenticated role. The
+            // mobile profile screen uses this to refresh on pull-to-refresh.
+            Route::get('profile', [RegisteredUserController::class, 'profileData'])->name('profile');
         });
     });
 
