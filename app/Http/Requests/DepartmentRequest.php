@@ -23,19 +23,19 @@ class DepartmentRequest extends FormRequest
 
     public function rules(): array
     {
-        // Departments often span multiple branches (Engineering, HR, etc.),
-        // so branch_id is captured when relevant but not required. `code`
-        // also matches the dashboard UX (placeholder + hint text both
-        // signal "optional").
+        // `branch_id` is NOT NULL in the DB (see
+        // 2026_04_21_195624_add_branch_id_to_departments_table) so it must be
+        // supplied — the dashboard form now includes a branch picker. `code`
+        // is genuinely optional (nullable column + "optional" UX hint).
         //
-        // Note: the previous version had a comma-split bug
+        // Note: the original rule had a comma-split bug
         // (`'branch_id' => 'required', 'exists:company_branches,id'`) which
-        // dropped the exists rule and silently forced branch_id required.
+        // dropped the exists check; it's now a proper single rule.
         return [
             'company_id' => ['required', 'exists:companies,id'],
+            'branch_id'  => ['required', 'exists:company_branches,id'],
             'name'       => ['required', 'string', 'max:255'],
             'code'       => ['nullable', 'string', 'max:50'],
-            'branch_id'  => ['nullable', 'exists:company_branches,id'],
         ];
     }
 

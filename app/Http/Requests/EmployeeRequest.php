@@ -25,9 +25,13 @@ class EmployeeRequest extends FormRequest
 
     public function rules(): array
     {
-        // Only enforce the fields the dashboard form actually collects today.
-        // role/department/iqama/email/phone/logo are all useful but optional
-        // — they can be filled in later from the employee detail view.
+        // Required vs nullable is driven by the DB schema (see
+        // 2026_04_21_195624_create_employees_table):
+        //   * email + iqama_number are UNIQUE NOT NULL  → required
+        //   * employee_number is UNIQUE NOT NULL        → required
+        //   * role_id / department_id / phone / logo are nullable → optional
+        // Unique rules are scoped to the current employee id so updates don't
+        // collide with the row's own values.
         $employeeId = $this->route('employee') ?? $this->id;
 
         return [
@@ -38,10 +42,10 @@ class EmployeeRequest extends FormRequest
             'user_id'         => ['required', 'exists:users,id'],
 
             'employee_number' => ['required', 'string', 'unique:employees,employee_number,' . $employeeId],
-            'iqama_number'    => ['nullable', 'string', 'unique:employees,iqama_number,' . $employeeId],
+            'iqama_number'    => ['required', 'string', 'unique:employees,iqama_number,' . $employeeId],
 
             'name'            => ['required', 'string', 'max:255'],
-            'email'           => ['nullable', 'email', 'unique:employees,email,' . $employeeId],
+            'email'           => ['required', 'email', 'unique:employees,email,' . $employeeId],
             'phone'           => ['nullable', 'string', 'unique:employees,phone,' . $employeeId],
             'status'          => ['required', 'in:active,inactive'],
 
