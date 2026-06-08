@@ -47,6 +47,9 @@ class PasswordResetLinkController extends Controller
         // 5️⃣ Send OTP email
         Mail::to($user->email)->send(new SendOtpMail($otp));
 
+        // DEV/DEMO ONLY: returning the user model exposes data.reset_otp so the
+        // mobile app can auto-fill the OTP field. REMOVE FOR PRODUCTION HARDENING —
+        // the OTP should only be delivered via the email above, never in the API body.
         return ResponseHelper::success(
             $user,
             __('messages.otp_sent')

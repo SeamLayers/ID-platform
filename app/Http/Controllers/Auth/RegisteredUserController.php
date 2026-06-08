@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -63,6 +64,8 @@ class RegisteredUserController extends Controller
 
                 'expire_password' => now()->addHours(48),
 
+                'must_reset_password' => $validated['user_type'] === User::TYPE_EMPLOYEE,
+
             ]);
 
             $user->assignRole($validated['user_type']);
@@ -97,6 +100,18 @@ Google Play / Apple Store";
                     Log::error('SMS Sending Failed', [
                         'phone' => $validated['phone'],
                         'error' => $smsException->getMessage()
+                    ]);
+                }
+
+                try {
+                    Mail::raw($message, function ($mail) use ($user) {
+                        $mail->to($user->email)
+                             ->subject('Your ID Plus account credentials');
+                    });
+                } catch (\Throwable $mailException) {
+                    Log::error('Credentials Email Sending Failed', [
+                        'email' => $user->email,
+                        'error' => $mailException->getMessage(),
                     ]);
                 }
             }

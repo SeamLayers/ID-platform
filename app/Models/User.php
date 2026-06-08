@@ -40,7 +40,8 @@ class User extends Authenticatable implements AuditableContract
         'phone',
         'ip_address',
         'expire_password',
-        'is_login_active'
+        'is_login_active',
+        'must_reset_password',
     ];
 
     const TYPE_SUPERADMIN = 'superadmin';
@@ -72,6 +73,7 @@ class User extends Authenticatable implements AuditableContract
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'must_reset_password' => 'boolean',
     ];
 
       public function routeNotificationForFcm()

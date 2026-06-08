@@ -23,6 +23,10 @@ class UserResource extends JsonResource
             'device_token' => $this->device_token,
             'roles' => $this->getRoleNames(),
             'permissions' => $this->getAllPermissions()->pluck('name'),
+            // First-time-password flag. Cast to (bool) defensively in case a
+            // pre-migration/legacy row returns null. Included here so BOTH the
+            // login response AND GET /auth/profile expose must_reset_password.
+            'must_reset_password' => (bool) $this->must_reset_password,
             // Null on the /profile ("me") endpoint — only the login flow mints
             // and attaches a fresh token; clients keep their stored one.
             'token' => $this->token,

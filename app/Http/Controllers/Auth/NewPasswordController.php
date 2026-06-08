@@ -29,10 +29,11 @@ class NewPasswordController extends Controller
         }
 
         $user->update([
-            'password'       => Hash::make($validated['password']),
-            'reset_otp'      => null,
-            'otp_expires_at' => null,
-            'remember_token' => Str::random(60),
+            'password'            => Hash::make($validated['password']),
+            'reset_otp'           => null,
+            'otp_expires_at'      => null,
+            'remember_token'      => Str::random(60),
+            'must_reset_password' => false,
         ]);
 
         return ResponseHelper::success(
