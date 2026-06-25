@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 
@@ -10,14 +12,27 @@ class CardCodeService
     /**
      * Generate QR code image (base64 or file)
      */
-    public function generateQr(string $url)
+
+
+
+    public function generateQr(string $url, string $employeeNumber): string
     {
-        return base64_encode(
-            QrCode::format('png')
-                ->size(300)
-                ->errorCorrection('H')
-                ->generate($url)
+        $png = QrCode::format('png')
+            ->size(300)
+            ->errorCorrection('H')
+            ->generate($url);
+
+        $fileName = sprintf(
+            'QR_%s_%s.png',
+            $employeeNumber,
+            Carbon::now()->format('Ymd_His')
         );
+
+        $path = "qr-codes/{$fileName}";
+
+        Storage::disk('public')->put($path, $png);
+
+        return $path;
     }
     /**
      * Generate NFC code (logical identifier)
@@ -46,10 +61,8 @@ class CardCodeService
 
         return [
             'public_url' => $publicUrl,
-
-            'qr_code' => $this->generateQr($fullUrl),
-
-            'nfc_code' => $this->generateNfcCode($employee),
+            'qr_code'    => $this->generateQr($fullUrl, $employee->employee_number),
+            'nfc_code'   => $this->generateNfcCode($employee),
         ];
     }
 }
