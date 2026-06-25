@@ -207,16 +207,6 @@
                 <td>{{ $employee->iqama_number ?? '-' }}</td>
             </tr>
 
-            <tr>
-                <td class="label">Nationality</td>
-                <td>{{ $employee->nationality ?? '-' }}</td>
-            </tr>
-
-            <tr>
-                <td class="label">Gender</td>
-                <td>{{ $employee->gender ?? '-' }}</td>
-            </tr>
-
         </table>
 
     </div>
@@ -247,18 +237,9 @@
 
             <tr>
                 <td class="label">Branch</td>
-                <td>{{ $employee->branch ?? '-' }}</td>
+                <td>{{ $employee->branch->name ?? '-' }}</td>
             </tr>
 
-            <tr>
-                <td class="label">Manager</td>
-                <td>{{ optional($employee->manager)->name ?? '-' }}</td>
-            </tr>
-
-            <tr>
-                <td class="label">Hire Date</td>
-                <td>{{ $employee->hire_date ?? '-' }}</td>
-            </tr>
 
         </table>
 
@@ -335,7 +316,7 @@
 
         @if($card->qr_code)
 
-            <img src="{{ Storage::url($card->qr_code) }}"
+            <img src="{{ \Illuminate\Support\Facades\Storage::url($card->qr_code) }}"
                  class="qr">
 
         @endif
