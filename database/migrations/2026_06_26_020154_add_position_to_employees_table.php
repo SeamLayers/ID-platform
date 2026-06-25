@@ -7,14 +7,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('business_cards', function (Blueprint $table) {
+        Schema::table('employees', function (Blueprint $table) {
             $table->unsignedInteger('position')->nullable();
         });
     }
 
     public function down(): void
     {
-        Schema::table('business_cards', function (Blueprint $table) {
+        Schema::table('employees', function (Blueprint $table) {
             $table->dropColumn('position');
         });
     }
