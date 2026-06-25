@@ -236,7 +236,7 @@
 
             <tr>
                 <td class="label">Position</td>
-                <td>{{ optional($employee->postion) }}</td>
+                <td>{{ optional($employee->position) }}</td>
             </tr>
         </table>
 
