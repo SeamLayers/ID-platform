@@ -3,41 +3,43 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class BusinessCardResource extends JsonResource
 {
+    use Illuminate\Support\Facades\Storage;
+
     public function toArray($request): array
     {
         return [
-            'id'                    => $this->id,
+            'id' => $this->id,
+            'employee_id' => $this->employee_id,
 
-            'employee_id'           => $this->employee_id,
-
-            'template'              => new BusinessCardTemplateResource(
+            'template' => new BusinessCardTemplateResource(
                 $this->whenLoaded('template')
             ),
 
-            'card_data_json'        => $this->card_data_json,
+            'card_data_json' => $this->card_data_json,
 
-            'qr_code'               => $this->qr_code,
-            'nfc_code'              => $this->nfc_code,
+            'qr_code' => $this->qr_code
+                ? Storage::disk('public')->url($this->qr_code)
+                : null,
+
+            'nfc_code' => $this->nfc_code,
 
             'public_url' => url('/api/v1/card/' . $this->public_url),
-            'expiry_public_url'     => $this->expiry_public_url,
+            'expiry_public_url' => $this->expiry_public_url,
 
-            'is_active'             => (bool) $this->is_active,
+            'is_active' => (bool) $this->is_active,
+            'status' => $this->status,
 
-            'status'                => $this->status,
+            'submitted_at' => $this->submitted_at,
+            'reviewed_at' => $this->reviewed_at,
+            'reviewed_by' => $this->reviewed_by,
+            'rejection_reason' => $this->rejection_reason,
 
-            'submitted_at'          => $this->submitted_at,
-            'reviewed_at'           => $this->reviewed_at,
-
-            'reviewed_by'           => $this->reviewed_by,
-
-            'rejection_reason'      => $this->rejection_reason,
-
-            'created_at'            => $this->created_at?->format('Y-m-d H:i:s'),
-            'updated_at'            => $this->updated_at?->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
     }
 }
