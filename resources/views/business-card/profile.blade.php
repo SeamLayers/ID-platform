@@ -234,7 +234,10 @@
                 <td>{{ $employee->branch->name ?? '-' }}</td>
             </tr>
 
-
+            <tr>
+                <td class="label">Position</td>
+                <td>{{ optional($employee->postion) }}</td>
+            </tr>
         </table>
 
     </div>
