@@ -12,12 +12,12 @@ class CardCodeService
      */
     public function generateQr(string $url)
     {
-//        return base64_encode(
-//            QrCode::format('png')
-//                ->size(300)
-//                ->errorCorrection('H')
-//                ->generate($url)
-//        );
+        return base64_encode(
+            QrCode::format('png')
+                ->size(300)
+                ->errorCorrection('H')
+                ->generate($url)
+        );
     }
     /**
      * Generate NFC code (logical identifier)

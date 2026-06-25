@@ -248,8 +248,14 @@ Google Play / Apple Store";
         // so mobile/dashboard clients can reuse their AuthUser parser. The
         // raw model would leak ip_address / expire_password and omit
         // roles+permissions, so we wrap it in UserResource.
+
+        $user = auth()->user()->load([
+            'employee.company',
+            'employee.businessCard',
+        ]);
+
         return ResponseHelper::success(
-            new UserResource(auth()->user()),
+            new UserResource($user),
             __('messages.profile_retrieved')
         );
     }

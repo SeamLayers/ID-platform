@@ -31,6 +31,7 @@ class Employee extends Model implements HasMedia
         $this->addMediaCollection('employee_logo')
             ->singleFile(); // only one logo per company
     }
+
     public function department()
     {
         return $this->belongsTo(Department::class);
