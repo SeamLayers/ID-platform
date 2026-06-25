@@ -39,26 +39,29 @@ class BusinessCardController extends Controller
     {
         $employee = $card->employee;
 
+        $publicUrl = url('/api/v1/card/' . $card->public_url);
+
         $vcard = <<<VCF
 BEGIN:VCARD
 VERSION:3.0
+N:{$employee->name}
 FN:{$employee->name}
 ORG:{$employee->company->name}
 TITLE:{$employee->job_title}
-TEL;TYPE=CELL:{$employee->phone}
-EMAIL:{$employee->email}
-URL:https://idplus.cfd
+TEL;TYPE=WORK,CELL:{$employee->phone}
+EMAIL;TYPE=WORK:{$employee->email}
+URL:{$publicUrl}
+NOTE:Digital Business Card
 END:VCARD
 VCF;
 
         return response($vcard)
-            ->header('Content-Type', 'text/vcard')
+            ->header('Content-Type', 'text/vcard; charset=UTF-8')
             ->header(
                 'Content-Disposition',
                 'attachment; filename="'.$employee->employee_number.'.vcf"'
             );
     }
-
     /**
      * List business cards
      */
