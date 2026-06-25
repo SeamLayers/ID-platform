@@ -7,6 +7,7 @@ use App\Http\Helpers\ResponseHelper;
 use App\Http\Requests\BusinessCardRequest;
 use App\Http\Requests\RejectBCRequest;
 use App\Http\Resources\BusinessCardResource;
+use App\Http\Resources\EmployeeResource;
 use App\Models\BusinessCard;
 use App\Models\Employee;
 use App\Services\CardCodeService;
@@ -125,6 +126,22 @@ class BusinessCardController extends Controller
 
         return ResponseHelper::success(
             new BusinessCardResource($card),
+            __('messages.data_retrieved')
+        );
+    }
+
+    public function CardSlug(string $slug)
+    {
+        $card = BusinessCard::with([
+            'employee.company',
+            'employee.department',
+            'employee.businessCard',
+        ])
+            ->where('public_url', $slug)
+            ->firstOrFail();
+
+        return ResponseHelper::success(
+            new EmployeeResource($card->employee),
             __('messages.data_retrieved')
         );
     }

@@ -44,7 +44,7 @@ Route::prefix('v1')->group( function () {
         // Authenticated routes
         Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('logout', [AuthenticatedSessionController::class, 'logout'])->name('logout');
-
+            Route::get('/card/{slug}', [BusinessCardController::class, 'CardSlug']);
             // "Me" endpoint — returns the current user (id/name/email/phone/
             // user_type/roles/permissions) for any authenticated role. The
             // mobile profile screen uses this to refresh on pull-to-refresh.
