@@ -315,10 +315,9 @@
         </div>
 
         @if($card->qr_code)
-
-            <img src="{{ \Illuminate\Support\Facades\Storage::url($card->qr_code) }}"
-                 class="qr">
-
+            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($card->qr_code) }}"
+                 class="qr"
+                 alt="QR Code">
         @endif
 
     </div>
