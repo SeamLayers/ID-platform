@@ -57,7 +57,7 @@ class CardCodeService
     {
         $publicUrl = $this->generatePublicUrl();
 
-        $fullUrl = url('/card/' . $publicUrl);
+        $fullUrl = url('/api/card/' . $publicUrl);
 
         return [
             'public_url' => $publicUrl,

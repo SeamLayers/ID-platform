@@ -25,9 +25,10 @@ use \App\Http\Controllers\Dashboard\{
 };
 use App\Http\Controllers\Public\PublicCardController;
 
-Route::get('/card/{slug}', [BusinessCardController::class, 'CardSlug']);
 
 Route::prefix('v1')->group( function () {
+    Route::get('/card/{slug}', [BusinessCardController::class, 'CardSlug']);
+
 
     /*
     |--------------------------------------------------------------------------
