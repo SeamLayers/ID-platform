@@ -201,12 +201,6 @@
                 <td class="label">Employee No</td>
                 <td>{{ $employee->employee_number }}</td>
             </tr>
-
-            <tr>
-                <td class="label">Iqama</td>
-                <td>{{ $employee->iqama_number ?? '-' }}</td>
-            </tr>
-
         </table>
 
     </div>
