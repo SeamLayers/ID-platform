@@ -16,7 +16,7 @@ class Employee extends Model implements HasMedia
     protected $fillable = [
         'company_id','branch_id','role_id','department_id','user_id',
         'employee_number','iqama_number',
-        'name','email','phone','status'
+        'name','email','phone','status','position'
     ];
 
     public function scopeNotDeleted($query)
