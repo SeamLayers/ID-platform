@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Storage;
 
 class BusinessCardResource extends JsonResource
 {
-    use Illuminate\Support\Facades\Storage;
 
     public function toArray($request): array
     {
