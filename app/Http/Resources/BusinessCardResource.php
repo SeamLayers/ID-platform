@@ -22,7 +22,7 @@ class BusinessCardResource extends JsonResource
             'qr_code'               => $this->qr_code,
             'nfc_code'              => $this->nfc_code,
 
-            'public_url'            => $this->public_url,
+            'public_url' => url('/api/v1/card/' . $this->public_url),
             'expiry_public_url'     => $this->expiry_public_url,
 
             'is_active'             => (bool) $this->is_active,

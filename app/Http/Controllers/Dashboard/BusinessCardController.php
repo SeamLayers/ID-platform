@@ -136,9 +136,7 @@ class BusinessCardController extends Controller
             'employee.company',
             'employee.department',
             'employee.businessCard',
-        ])
-            ->where('public_url', $slug)
-            ->firstOrFail();
+        ])->where('public_url', $slug)->firstOrFail();
 
         return ResponseHelper::success(
             new EmployeeResource($card->employee),
