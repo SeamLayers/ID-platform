@@ -28,7 +28,8 @@ use App\Http\Controllers\Public\PublicCardController;
 
 Route::prefix('v1')->group( function () {
     Route::get('/card/{slug}', [BusinessCardController::class, 'CardSlug']);
-
+    Route::get('/business-card/{card}/vcard', [BusinessCardController::class, 'downloadVCard'])
+        ->name('business-card.vcard');
 
     /*
     |--------------------------------------------------------------------------

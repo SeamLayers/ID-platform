@@ -32,6 +32,33 @@ class BusinessCardController extends Controller
         $this->middleware('permission:business_card.deactivate')->only(['deactivate']);
     }
 
+
+
+
+    public function downloadVCard(BusinessCard $card)
+    {
+        $employee = $card->employee;
+
+        $vcard = <<<VCF
+BEGIN:VCARD
+VERSION:3.0
+FN:{$employee->name}
+ORG:{$employee->company->name}
+TITLE:{$employee->job_title}
+TEL;TYPE=CELL:{$employee->phone}
+EMAIL:{$employee->email}
+URL:https://idplus.cfd
+END:VCARD
+VCF;
+
+        return response($vcard)
+            ->header('Content-Type', 'text/vcard')
+            ->header(
+                'Content-Disposition',
+                'attachment; filename="'.$employee->employee_number.'.vcf"'
+            );
+    }
+
     /**
      * List business cards
      */
