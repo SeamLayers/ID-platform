@@ -13,7 +13,9 @@ class CompanyBranchResource extends JsonResource
             'company_id' => $this->company_id,
             'name'       => $this->name,
             'address'    => $this->address,
-            'company'    => $this->whenLoaded('company'),
+            'company' => CompanyResource::make(
+                $this->whenLoaded('company')
+            ),
             'created_at' => $this->created_at,
         ];
     }

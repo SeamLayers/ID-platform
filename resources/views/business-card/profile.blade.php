@@ -2,430 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $employee->name }}</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-
     <style>
-
-        body{
-            background:#edf2f7;
-            font-family:'Segoe UI',sans-serif;
-        }
-
-        .profile-card{
-
-            max-width:650px;
-            margin:35px auto;
-
-            border:none;
-            border-radius:25px;
-
-            overflow:hidden;
-
-            box-shadow:0 12px 35px rgba(0,0,0,.12);
-        }
-
-        .header{
-
-            background:linear-gradient(135deg,#0d6efd,#198754);
-
-            color:#fff;
-
-            text-align:center;
-
-            padding:35px;
-        }
-
-        .logo{
-
-            max-height:70px;
-            margin-bottom:15px;
-        }
-
-        .avatar{
-
-            width:130px;
-            height:130px;
-
-            border-radius:50%;
-
-            background:white;
-
-            margin:auto;
-
-            border:6px solid rgba(255,255,255,.25);
-
-            overflow:hidden;
-        }
-
-        .avatar img{
-
-            width:100%;
-            height:100%;
-            object-fit:cover;
-        }
-
-        .avatar span{
-
-            display:flex;
-            align-items:center;
-            justify-content:center;
-
-            height:100%;
-
-            font-size:55px;
-            color:#0d6efd;
-            font-weight:bold;
-        }
-
-        .section{
-
-            padding:25px;
-        }
-
-        .section-title{
-
-            color:#0d6efd;
-
-            font-size:18px;
-
-            font-weight:600;
-
-            margin-bottom:15px;
-        }
-
-        .table td{
-
-            border:none;
-
-            padding:8px 0;
-        }
-
-        .label{
-
-            width:40%;
-            color:#6c757d;
-        }
-
-        .qr{
-
-            width:170px;
-
-            margin:auto;
-
-            display:block;
-        }
-
-        .footer{
-
-            background:#fafafa;
-
-            text-align:center;
-
-            padding:25px;
-
-            color:#888;
-        }
-
-        .action-btn{
-
-            margin-bottom:10px;
-        }
-
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#0f172a,#1d4ed8);min-height:100vh;color:#fff}
+        .container{max-width:980px;margin:auto;padding:40px 20px}
+        .glass{background:rgba(255,255,255,.08);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:30px;margin-bottom:24px}
+        .hero{text-align:center}
+        .logo{height:70px;margin-bottom:16px}
+        .avatar{width:150px;height:150px;border-radius:50%;overflow:hidden;margin:20px auto;border:5px solid rgba(255,255,255,.25)}
+        .avatar img{width:100%;height:100%;object-fit:cover}
+        .initial{display:flex;align-items:center;justify-content:center;height:100%;font-size:56px;background:#fff;color:#1d4ed8;font-weight:bold}
+        h1{margin:12px 0}.badge{display:inline-block;background:#fff;color:#111;padding:8px 18px;border-radius:999px}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+        .item,.contact{background:rgba(255,255,255,.05);padding:18px;border-radius:16px}
+        small{opacity:.7;display:block;margin-bottom:6px}
+        .contact{display:flex;gap:12px;text-decoration:none;color:#fff;align-items:center}
+        .contact i{font-size:26px}
+        .actions a{display:block;text-align:center;text-decoration:none;color:#fff;padding:14px;border-radius:12px;margin-top:12px}
+        .call{background:#16a34a}.mail{background:#2563eb}.save{background:#111827}
+        .qr{display:block;margin:20px auto;max-width:220px}
     </style>
-
 </head>
-
 <body>
-
-<div class="card profile-card">
-
-    <div class="header">
-
-        {{-- Company Logo --}}
-
-        @if(optional($employee->company)->logo)
-
-            <img src="{{ asset('storage/'.$employee->company->logo) }}"
-                 class="logo">
-
-        @endif
-
+<div class="container">
+    <div class="glass hero">
+        @if(optional($employee->company)->logo)<img class="logo" src="{{ asset('storage/'.$employee->company->logo) }}">@endif
         <div class="avatar">
-
             @if($employee->photo)
-
                 <img src="{{ asset('storage/'.$employee->photo) }}">
-
             @else
-
-                <span>{{ strtoupper(substr($employee->name,0,1)) }}</span>
-
+                <div class="initial">{{ strtoupper(substr($employee->name,0,1)) }}</div>
             @endif
-
         </div>
-
-        <h3 class="mt-3">{{ $employee->name }}</h3>
-
-        <h6>
-
-            {{ $employee->job_title }}
-
-        </h6>
-
-        <span class="badge bg-light text-success">
-
-{{ optional($employee->company)->name }}
-
-</span>
-
+        <h1>{{ $employee->name }}</h1>
+        <p>{{ $employee->position }}</p>
+        <span class="badge">{{ optional($employee->company)->name }}</span>
     </div>
 
-    <div class="section">
-
-        <div class="section-title">
-
-            <i class="bi bi-person-fill"></i>
-
-            Personal Information
-
+    <div class="glass">
+        <h2>Employee Information</h2><br>
+        <div class="grid">
+            <div class="item"><small>Employee No</small>{{ $employee->employee_number }}</div>
+            <div class="item"><small>Department</small>{{ optional($employee->department)->name }}</div>
+            <div class="item"><small>Branch</small>{{ optional($employee->branch)->name }}</div>
+            <div class="item"><small>Position</small>{{ $employee->position }}</div>
         </div>
-
-        <table class="table">
-
-            <tr>
-                <td class="label">Employee No</td>
-                <td>{{ $employee->employee_number }}</td>
-            </tr>
-        </table>
-
     </div>
 
-    <hr>
-
-    <div class="section">
-
-        <div class="section-title">
-
-            <i class="bi bi-building"></i>
-
-            Employment
-
-        </div>
-
-        <table class="table">
-
-            <tr>
-                <td class="label">Company</td>
-                <td>{{ optional($employee->company)->name }}</td>
-            </tr>
-
-            <tr>
-                <td class="label">Department</td>
-                <td>{{ optional($employee->department)->name }}</td>
-            </tr>
-
-            <tr>
-                <td class="label">Branch</td>
-                <td>{{ $employee->branch->name ?? '-' }}</td>
-            </tr>
-
-            <tr>
-                <td class="label">Position</td>
-                <td>{{ $employee->position ?? '-'}}</td>
-            </tr>
-        </table>
-
-    </div>
-
-    <hr>
-
-    <div class="section">
-
-        <div class="section-title">
-
-            <i class="bi bi-envelope-fill"></i>
-
-            Contact
-
-        </div>
-
-        <table class="table">
-
-            <tr>
-                <td class="label">Email</td>
-
-                <td>
-
-                    <a href="mailto:{{ $employee->email }}">
-
-                        {{ $employee->email }}
-
-                    </a>
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <td class="label">
-
-                    Phone
-
-                </td>
-
-                <td>
-
-                    @if($employee->phone)
-
-                        <a href="tel:{{ $employee->phone }}">
-
-                            {{ $employee->phone }}
-
-                        </a>
-
-                    @endif
-
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
-
-    <hr>
-
-    <div class="section text-center">
-
-        <div class="section-title">
-
-            <i class="bi bi-qr-code"></i>
-
-            QR Code
-
-        </div>
-
-        @if($card->qr_code)
-            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($card->qr_code) }}"
-                 class="qr"
-                 alt="QR Code">
+    <div class="glass">
+        <h2>Contact</h2><br>
+        @if($employee->phone)
+            <a class="contact" href="tel:{{ $employee->phone }}"><i class="bi bi-telephone-fill"></i><div><strong>Phone</strong><br>{{ $employee->phone }}</div></a><br>
         @endif
-
+        @if($employee->email)
+            <a class="contact" href="mailto:{{ $employee->email }}"><i class="bi bi-envelope-fill"></i><div><strong>Email</strong><br>{{ $employee->email }}</div></a>
+        @endif
     </div>
 
-    <hr>
-
-    <div class="section">
-
-        <div class="section-title">
-
-            <i class="bi bi-lightning-charge-fill"></i>
-
-            Quick Actions
-
-        </div>
-
-        <div class="d-grid">
-
-            @if($employee->phone)
-
-                <a href="tel:{{ $employee->phone }}"
-                   class="btn btn-success action-btn">
-
-                    <i class="bi bi-telephone-fill"></i>
-
-                    Call
-
-                </a>
-
-            @endif
-
-            @if($employee->email)
-
-                <a href="mailto:{{ $employee->email }}"
-                   class="btn btn-primary action-btn">
-
-                    <i class="bi bi-envelope-fill"></i>
-
-                    Email
-
-                </a>
-
-            @endif
-
-            @if(optional($employee->company)->website)
-
-                <a href="{{ $employee->company->website }}"
-                   target="_blank"
-                   class="btn btn-dark action-btn">
-
-                    <i class="bi bi-globe"></i>
-
-                    Company Website
-
-                </a>
-
-            @endif
-
-            <a href="{{ route('business-card.vcard',$card->id) }}"
-               class="btn btn-outline-primary">
-
-                <i class="bi bi-person-vcard-fill"></i>
-
-                Download Contact
-
-            </a>
-
-        </div>
-
+    <div class="glass" style="text-align:center">
+        <h2>QR Code</h2>
+        @if($card->qr_code)
+            <img class="qr" src="{{ Storage::disk('public')->url($card->qr_code) }}">
+        @endif
     </div>
 
-    <div class="footer">
-
-        <div>
-
-            <strong>{{ config('app.name') }}</strong>
-
-        </div>
-
-        <div>
-
-            Digital Employee Business Card
-
-        </div>
-
-        <div class="mt-2">
-
-            @if($card->is_active)
-
-                <span class="badge bg-success">
-
-Active
-
-</span>
-
-            @else
-
-                <span class="badge bg-danger">
-
-Inactive
-
-</span>
-
-            @endif
-
-        </div>
-
+    <div class="glass actions">
+        @if($employee->phone)<a class="call" href="tel:{{ $employee->phone }}">Call</a>@endif
+        @if($employee->email)<a class="mail" href="mailto:{{ $employee->email }}">Email</a>@endif
+        <a class="save" href="{{ route('business-card.vcard',$card->id) }}">Download Contact</a>
     </div>
-
 </div>
-
 </body>
-
 </html>

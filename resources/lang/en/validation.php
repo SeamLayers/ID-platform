@@ -66,6 +66,8 @@ return [
         'card_data_json'    => 'Business Card Data',
 
         'permissions'       => 'Permissions',
+        'position'            => 'position',
+
     ],
     /*
     |--------------------------------------------------------------------------

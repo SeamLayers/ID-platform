@@ -26,11 +26,14 @@ class CompanyResource extends JsonResource
             }),
 
             // Employees
-            'employees' => $this->whenLoaded('employees'),
+            'employees' => EmployeeResource::collection(
+                $this->whenLoaded('employees')
+            ),
 
             // Branches
-            'branches' => $this->whenLoaded('branches'),
-
+            'branches' => CompanyBranchResource::collection(
+                $this->whenLoaded('branches')
+            ),
             // Media (Spatie)
             'logo' => $this->getFirstMediaUrl('company_logo'),
 

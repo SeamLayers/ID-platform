@@ -16,14 +16,34 @@ class EmployeeResource extends JsonResource
             'email'           => $this->email,
             'phone'           => $this->phone,
             'status'          => $this->status,
+            'position'          => $this->position,
 
-            'company'         => $this->whenLoaded('company'),
-            'branch'          => $this->whenLoaded('branch'),
-            'role'            => $this->whenLoaded('role'),
-            'department'      => $this->whenLoaded('department'),
-            'user'            => $this->whenLoaded('user'),
-            'projects'        => $this->whenLoaded('projects'),
-            'business_card'   => $this->whenLoaded('businessCard'),
+            'company' => CompanyResource::make(
+                $this->whenLoaded('company')
+            ),
+            'branch' => CompanyBranchResource::make(
+                $this->whenLoaded('branch')
+            ),
+
+            'role' => RoleResource::make(
+                $this->whenLoaded('role')
+            ),
+
+            'department' => DepartmentResource::make(
+                $this->whenLoaded('department')
+            ),
+
+            'user' => UserResource::make(
+                $this->whenLoaded('user')
+            ),
+
+            'projects' => ProjectResource::collection(
+                $this->whenLoaded('projects')
+            ),
+
+            'business_card' => BusinessCardResource::make(
+                $this->whenLoaded('businessCard')
+            ),
 
             'logo'            => $this->getFirstMediaUrl('employee_logo'),
 

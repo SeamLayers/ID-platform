@@ -15,7 +15,9 @@ class ProjectResource extends JsonResource
             'start_date'  => $this->start_date,
             'end_date'    => $this->end_date,
 
-            'employees'   => $this->whenLoaded('employees'),
+            'employees' => EmployeeResource::collection(
+                $this->whenLoaded('employees')
+            ),
 
             'employees_count' => $this->employees?->count(),
 

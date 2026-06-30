@@ -130,7 +130,6 @@ Route::prefix('v1')->group( function () {
                 // Workflow
                 Route::post('business-cards/{id}/approve', [BusinessCardController::class, 'approve']);
                 Route::post('business-cards/{id}/reject', [BusinessCardController::class, 'reject']);
-
             });
 
     });

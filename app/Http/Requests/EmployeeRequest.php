@@ -48,6 +48,7 @@ class EmployeeRequest extends FormRequest
             'email'           => ['required', 'email', 'unique:employees,email,' . $employeeId],
             'phone'           => ['nullable', 'string', 'unique:employees,phone,' . $employeeId],
             'status'          => ['required', 'in:active,inactive'],
+            'position'          => ['required'],
 
             'logo'            => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
         ];

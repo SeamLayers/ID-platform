@@ -14,8 +14,13 @@ class EmployeeProjectResource extends JsonResource
             'project_id'  => $this->project_id,
             'assigned_at' => $this->assigned_at,
 
-            'employee'    => $this->whenLoaded('employee'),
-            'project'     => $this->whenLoaded('project'),
+            'employee' => EmployeeResource::make(
+                $this->whenLoaded('employee')
+            ),
+
+            'project' => ProjectResource::make(
+                $this->whenLoaded('project')
+            ),
         ];
     }
 }

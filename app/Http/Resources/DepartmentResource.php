@@ -16,8 +16,13 @@ class DepartmentResource extends JsonResource
 
             'display_name' => $this->display_name,
 
-            'company'    => $this->whenLoaded('company'),
-            'employees'  => $this->whenLoaded('employees'),
+            'company' => CompanyResource::make(
+                $this->whenLoaded('company')
+            ),
+
+            'employees' => EmployeeResource::collection(
+                $this->whenLoaded('employees')
+            ),
 
             'employees_count' => $this->employees?->count(),
 

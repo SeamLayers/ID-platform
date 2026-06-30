@@ -4,10 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+
 class UserResource extends JsonResource
 {
-
-
     public function toArray($request)
     {
         return [
@@ -22,9 +21,9 @@ class UserResource extends JsonResource
             'must_reset_password' => (bool) $this->must_reset_password,
             'token' => $this->token,
 
-            'employee' => $this->whenLoaded('employee'),
-
-
+            'employee' => EmployeeResource::make(
+                $this->whenLoaded('employee')
+            ),
         ];
     }
 }
