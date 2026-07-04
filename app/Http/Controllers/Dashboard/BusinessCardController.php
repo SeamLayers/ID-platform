@@ -47,7 +47,7 @@ VERSION:3.0
 N:{$employee->name}
 FN:{$employee->name}
 ORG:{$employee->company->name}
-TITLE:{$employee->job_title}
+TITLE:{$employee->position}
 TEL;TYPE=WORK,CELL:{$employee->phone}
 EMAIL;TYPE=WORK:{$employee->email}
 URL:{$publicUrl}
