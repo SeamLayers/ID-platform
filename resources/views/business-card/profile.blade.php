@@ -54,11 +54,35 @@
 
     <div class="glass">
         <h2>Contact</h2><br>
+
         @if($employee->phone)
-            <a class="contact" href="tel:{{ $employee->phone }}"><i class="bi bi-telephone-fill"></i><div><strong>Phone</strong><br>{{ $employee->phone }}</div></a><br>
+            <a class="contact" href="tel:{{ $employee->phone }}">
+                <i class="bi bi-telephone-fill"></i>
+                <div>
+                    <strong>Phone</strong><br>
+                    {{ $employee->phone }}
+                </div>
+            </a><br>
         @endif
+
         @if($employee->email)
-            <a class="contact" href="mailto:{{ $employee->email }}"><i class="bi bi-envelope-fill"></i><div><strong>Email</strong><br>{{ $employee->email }}</div></a>
+            <a class="contact" href="mailto:{{ $employee->email }}">
+                <i class="bi bi-envelope-fill"></i>
+                <div>
+                    <strong>Work Email</strong><br>
+                    {{ $employee->email }}
+                </div>
+            </a><br>
+        @endif
+
+        @if(optional($employee->user)->email)
+            <a class="contact" href="mailto:{{ $employee->user->email }}">
+                <i class="bi bi-envelope-fill"></i>
+                <div>
+                    <strong>Personal Email</strong><br>
+                    {{ $employee->user->email }}
+                </div>
+            </a>
         @endif
     </div>
 
