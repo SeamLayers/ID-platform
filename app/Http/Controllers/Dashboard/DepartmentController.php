@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
+use App\Models\Company;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Http\Requests\DepartmentRequest;
@@ -91,10 +92,35 @@ class DepartmentController extends Controller
 
     /**
      * Delete department
+     *
+     * Owners hold the department.delete permission but must stay inside
+     * their own tenancy: resolve their company the same way
+     * CompanyController@show does (companies.user_id = auth user) and
+     * refuse departments that belong to anyone else. Superadmin stays
+     * unrestricted.
      */
     public function destroy($id)
     {
         $department = Department::findOrFail($id);
+
+        $user = auth()->user();
+
+        if (! $user->hasRole('superadmin')) {
+
+            // pluck()->contains(): an owner can own several companies
+            // (companies.user_id isn't unique), so match against all of them.
+            $ownCompanyIds = Company::where('user_id', $user->id)->pluck('id');
+
+            // 404 (not 403) so cross-tenant probing can't confirm that a
+            // department id exists — mirrors the company_not_found pattern.
+            if (! $ownCompanyIds->contains((int) $department->company_id)) {
+                return ResponseHelper::error(
+                    __('messages.department_not_found'),
+                    null,
+                    404
+                );
+            }
+        }
 
         $department->delete();
 
