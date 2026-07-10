@@ -41,6 +41,9 @@ return [
 
     'employee_not_found' => 'Employee not found',
     'template_not_found' => 'Template not found',
+    'department_not_found' => 'Department not found',
+    'employee_company_forbidden' => 'You can only manage employees of your own company.',
+    'employee_user_invalid' => 'This user cannot be linked to an employee.',
 
     'employee_required' => 'Employee is required',
     'template_required' => 'Template is required',

@@ -51,6 +51,9 @@ return [
 
     'employee_not_found' => 'الموظف غير موجود',
     'template_not_found' => 'القالب غير موجود',
+    'department_not_found' => 'القسم غير موجود',
+    'employee_company_forbidden' => 'يمكنك إدارة موظفي شركتك فقط.',
+    'employee_user_invalid' => 'لا يمكن ربط هذا المستخدم بموظف.',
 
     'employee_required' => 'الموظف مطلوب',
     'template_required' => 'القالب مطلوب',
