@@ -21,7 +21,8 @@ use \App\Http\Controllers\Dashboard\{
     EmployeeProjectController,
     DepartmentController,
     BusinessCardController,
-    BusinessCardTemplateController
+    BusinessCardTemplateController,
+    OverviewController
 };
 use App\Http\Controllers\Public\PublicCardController;
 
@@ -89,6 +90,10 @@ Route::prefix('v1')->group( function () {
                 |-------------------------------
                 */
                 Route::middleware('role:superadmin|owner')->group(function () {
+                    // Real dashboard analytics (replaces the old hardcoded
+                    // charts on the web dashboard home). Tenancy-scoped inside
+                    // the controller so an owner only sees their own numbers.
+                    Route::get('overview', [OverviewController::class, 'overview']);
                     Route::apiResources([
                         'company-branch'   => CompanyBranchController::class,
                         'department'       => DepartmentController::class,
