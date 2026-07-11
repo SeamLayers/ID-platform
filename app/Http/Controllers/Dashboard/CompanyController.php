@@ -78,7 +78,6 @@ class CompanyController extends Controller
         $query = Company::with(['owner', 'employees', 'branches']);
 
         $company = $id !== null ? $query->find($id) : $query->where('user_id', auth()->id())->first();
-        dd(auth()->id(),$id,$company);
         if (! $company) {
             return ResponseHelper::error(
                 __('messages.company_not_found'),
