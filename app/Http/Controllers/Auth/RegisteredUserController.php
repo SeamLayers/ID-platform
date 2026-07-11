@@ -76,7 +76,7 @@ class RegisteredUserController extends Controller
 
             $message = null;
 
-            if ($validated['user_type'] === User::TYPE_EMPLOYEE) {
+            if ($validated['user_type'] === User::TYPE_EMPLOYEE  ) {
 
                 $message = "Your account has been created successfully.
 
@@ -87,6 +87,41 @@ Please log in to the application and change your password within 48 hours.
 
 Download ID Plus App:
 Google Play / Apple Store";
+
+                try {
+
+//                SmsService::sendSMS(
+//                    $validated['phone'],
+//                    $message
+//                );
+
+                } catch (\Throwable $smsException) {
+
+                    Log::error('SMS Sending Failed', [
+                        'phone' => $validated['phone'],
+                        'error' => $smsException->getMessage()
+                    ]);
+                }
+
+                try {
+                    Mail::raw($message, function ($mail) use ($user) {
+                        $mail->to($user->email)
+                             ->subject('Your ID Plus account credentials');
+                    });
+                } catch (\Throwable $mailException) {
+                    Log::error('Credentials Email Sending Failed', [
+                        'email' => $user->email,
+                        'error' => $mailException->getMessage(),
+                    ]);
+                }
+            }
+            if ($validated['user_type'] === User::TYPE_OWNER  ) {
+
+                $message = "Your account has been created successfully.
+
+                    Email: {$validated['email']}
+                    Temporary Password: {$plainPassword}
+                    Please log in to the application and change your password within 48 hours.";
 
                 try {
 
