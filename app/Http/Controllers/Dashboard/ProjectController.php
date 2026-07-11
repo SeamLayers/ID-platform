@@ -24,6 +24,9 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $projects = Project::with([
             'employees',
         ])
@@ -34,7 +37,7 @@ class ProjectController extends Controller
                 $q->where('name', 'like', "%{$request->search}%");
             })
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         return ResponseHelper::success(
             ProjectResource::collection($projects),

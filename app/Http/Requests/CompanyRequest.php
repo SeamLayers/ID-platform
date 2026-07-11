@@ -18,8 +18,18 @@ class CompanyRequest extends FormRequest
     }
     public function rules(): array
     {
+        // On update the apiResource binds the company id as the {company} route
+        // param; on store there is none. We use it to (a) let the record keep
+        // its own email, (b) keep the existing logo when none is re-uploaded,
+        // and (c) not force the owner (user_id) to be re-sent on every edit.
+        $companyId = $this->route('company');
+        $isUpdate  = ! is_null($companyId);
+
         return [
-            'user_id' => 'required|exists:users,id,user_type,owner',
+            'user_id' => [
+                $isUpdate ? 'sometimes' : 'required',
+                'exists:users,id,user_type,owner',
+            ],
             'name' => 'required|string|max:255',
             'commercial_register' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
@@ -28,9 +38,17 @@ class CompanyRequest extends FormRequest
                 'email',
                 'max:255',
                 Rule::unique('companies', 'email')
-                    ->whereNull('deleted_at'),
+                    ->whereNull('deleted_at')
+                    ->ignore($companyId),
             ],
-            'logo' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            // Required when creating; on edit the existing logo is preserved
+            // unless a replacement file is uploaded.
+            'logo' => [
+                $isUpdate ? 'nullable' : 'required',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
         ];
     }
 

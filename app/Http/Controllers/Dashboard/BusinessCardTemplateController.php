@@ -7,6 +7,7 @@ use App\Http\Helpers\ResponseHelper;
 use App\Http\Requests\BusinessCardTemplateRequest;
 use App\Http\Resources\BusinessCardTemplateResource;
 use App\Models\BusinessCardTemplate;
+use Illuminate\Http\Request;
 
 class BusinessCardTemplateController extends Controller
 {
@@ -28,11 +29,17 @@ class BusinessCardTemplateController extends Controller
     /**
      * List templates
      */
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $templates = BusinessCardTemplate::with('company')
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->where('company_id', $request->input('company_id'));
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         return ResponseHelper::success(
             BusinessCardTemplateResource::collection($templates),

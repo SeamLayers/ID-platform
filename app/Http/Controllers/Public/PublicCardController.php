@@ -71,6 +71,10 @@ class PublicCardController extends Controller
             'source'           => ['nullable', 'string', 'max:50'],
         ]);
 
+        // card_interactions.source is NOT NULL in the schema — a request
+        // without source used to 500 on insert. Default it instead.
+        $validated['source'] = $validated['source'] ?? 'LINK';
+
         $card->interactions()->create($validated);
 
         return ResponseHelper::success(null, __('messages.data_saved'));

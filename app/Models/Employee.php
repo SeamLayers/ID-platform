@@ -23,6 +23,38 @@ class Employee extends Model implements HasMedia
     {
         return $query->whereNull('deleted_at');
     }
+
+    /**
+     * Next auto-generated employee number for a company: EMP-{companyId}-{NNNN}.
+     *
+     * Locks the company row first so two concurrent creates for the same
+     * company serialize instead of racing to the same sequence value, and
+     * checks collisions withTrashed() because employee_number has a GLOBAL
+     * unique index that soft-deleted rows still occupy.
+     */
+    public static function nextNumberForCompany(int $companyId): string
+    {
+        // Serialize concurrent creates per company (no-op outside a
+        // transaction, callers wrap in DB::transaction).
+        Company::whereKey($companyId)->lockForUpdate()->first();
+
+        $sequence = static::withTrashed()
+                ->where('company_id', $companyId)
+                ->count() + 1;
+
+        do {
+            $number = sprintf('EMP-%d-%04d', $companyId, $sequence);
+
+            $taken = static::withTrashed()
+                ->where('employee_number', $number)
+                ->exists();
+
+            $sequence++;
+        } while ($taken);
+
+        return $number;
+    }
+
     /**
      * Register media collections
      */

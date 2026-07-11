@@ -1,0 +1,2863 @@
+{
+  "info": {
+    "_postman_id": "2c153d25-6dfe-4acd-9b80-5ddd6e8155a2",
+    "name": "iD+ Platform API — Complete",
+    "description": "Complete Postman collection for the iD+ platform Laravel API (https://idplus.cfd/ID-platform). Covers every route registered under `api/v1` as of 2026-07-10 (verified against `php artisan route:list`).\n\n**Getting started**: run 'Auth → Login — Superadmin' (or 'Login — Employee (mobile)' for the Mobile folder). The login test script stores `data.token` into the `{{token}}` collection variable; the collection-level Bearer auth applies it everywhere except the Public folder.\n\n**Variables**: `base_url` (https://idplus.cfd/ID-platform/api/v1), `token` (auto-filled by login), `device_token` (any string; default `flutter_dev_token`).\n\n**Response envelope**: every JSON endpoint wraps its payload as `{\"success\": bool, \"message\": string, \"data\": mixed}`.\n\n**QUIRKS**:\n- Most validation failures return **HTTP 422 with `success: true` and `data: null`** — read `message` for the error text; do NOT trust `success` alone.\n- Exceptions: `CompanyRequest` (company store/update) and `auth/forgot-password` return `success: false` plus an `errors` object on validation failure.\n- `privacy-policy` / `terms-conditions` return **HTTP 400** on a bad `lang` value.\n- The WAF in front of the server rejects empty POST bodies — every otherwise-empty POST in this collection sends a raw `{}` JSON body on purpose.\n- `dashboard/business-cards/{id}/analytics` is a **POST**, not a GET.\n- `PUT dashboard/employee-project/{id}` is registered in the router but the controller has **no `update` method** — calling it 500s. Marked DEPRECATED/BROKEN below.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://idplus.cfd/ID-platform/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_token",
+      "value": "flutter_dev_token",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints (Laravel Sanctum bearer tokens).\n\nRun one of the two Login requests first — a test script captures `data.token` into the collection variable `{{token}}`, which the collection-level Bearer auth then applies to every protected request.\n\n**Response envelope**: every JSON endpoint wraps its payload as `{\"success\": bool, \"message\": string, \"data\": mixed}`.\n\n**QUIRKS**:\n- Most validation failures return **HTTP 422 with `success: true` and `data: null`** — read `message` for the error text; do NOT trust `success` alone.\n- Exceptions: `CompanyRequest` (company store/update) and `auth/forgot-password` return `success: false` plus an `errors` object on validation failure.\n- `privacy-policy` / `terms-conditions` return **HTTP 400** on a bad `lang` value.\n- The WAF in front of the server rejects empty POST bodies — every otherwise-empty POST in this collection sends a raw `{}` JSON body on purpose.\n- `dashboard/business-cards/{id}/analytics` is a **POST**, not a GET.\n- `PUT dashboard/employee-project/{id}` is registered in the router but the controller has **no `update` method** — calling it 500s. Marked DEPRECATED/BROKEN below.",
+      "item": [
+        {
+          "name": "Login — Superadmin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as the seeded superadmin. `device_token` accepts any string (FCM token in production). On success the test script stores `data.token` into the collection variable `{{token}}` so every bearer request works immediately.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@system.com\",\n  \"password\": \"12345\",\n  \"device_token\": \"{{device_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j&&j.data&&j.data.token){pm.collectionVariables.set('token',j.data.token)}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — Employee (mobile)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as the demo employee account used by the mobile app. The test script stores `data.token` into `{{token}}`. Use this before exercising the Mobile folder.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@mimo.com\",\n  \"password\": \"12345678\",\n  \"device_token\": \"{{device_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j=pm.response.json(); if(j&&j.data&&j.data.token){pm.collectionVariables.set('token',j.data.token)}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Sends a password-reset OTP to the email. QUIRK: unlike most endpoints, validation failures here return `success: false` with an `errors` object.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@system.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Completes the reset started by Forgot Password using the emailed OTP.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"1234\",\n  \"email\": \"superadmin@system.com\",\n  \"password\": \"NewSecret123!\",\n  \"password_confirmation\": \"NewSecret123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "send-otp"
+              ]
+            },
+            "description": "Sends a phone OTP to the given number.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country_code\": \"+966\",\n  \"phone\": \"512345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies the 4-digit phone OTP sent by Send OTP.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country_code\": \"+966\",\n  \"phone\": \"512345678\",\n  \"otp\": \"1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Returns the authenticated user's profile (user, roles/permissions, employee + company/branch/department relations where applicable). Bearer token required."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes the current bearer token. Sends `{}` because the WAF rejects empty POST bodies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard (admin) API — bearer token required. Role gate: **superadmin|owner** on almost everything (Companies are superadmin-only; `owner/company` is owner-only) plus per-action Spatie permissions noted on each request.\n\n**Response envelope**: every JSON endpoint wraps its payload as `{\"success\": bool, \"message\": string, \"data\": mixed}`.\n\n**QUIRKS**:\n- Most validation failures return **HTTP 422 with `success: true` and `data: null`** — read `message` for the error text; do NOT trust `success` alone.\n- Exceptions: `CompanyRequest` (company store/update) and `auth/forgot-password` return `success: false` plus an `errors` object on validation failure.\n- `privacy-policy` / `terms-conditions` return **HTTP 400** on a bad `lang` value.\n- The WAF in front of the server rejects empty POST bodies — every otherwise-empty POST in this collection sends a raw `{}` JSON body on purpose.\n- `dashboard/business-cards/{id}/analytics` is a **POST**, not a GET.\n- `PUT dashboard/employee-project/{id}` is registered in the router but the controller has **no `update` method** — calling it 500s. Marked DEPRECATED/BROKEN below.",
+      "item": [
+        {
+          "name": "Companies",
+          "description": "Company CRUD — **superadmin role only** (plus per-action `company.*` Spatie permissions). Store/update are multipart because of the required `logo` image. QUIRK: `CompanyRequest` validation failures return `success: false` with an `errors` object (unlike the 422-with-success:true pattern elsewhere).",
+          "item": [
+            {
+              "name": "List Companies",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company"
+                  ]
+                },
+                "description": "List all companies. Superadmin only (`company.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Company",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company"
+                  ]
+                },
+                "description": "Create a company (multipart/form-data — `logo` image file is REQUIRED). `user_id` must reference an owner-type user. Superadmin only (`company.create`).",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "user_id",
+                      "value": "2",
+                      "type": "text",
+                      "description": "ID of an existing owner-type user who owns this company"
+                    },
+                    {
+                      "key": "name",
+                      "value": "Mhawer Trading Co.",
+                      "type": "text"
+                    },
+                    {
+                      "key": "commercial_register",
+                      "value": "CR-1010101010",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "+966512345678",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "info@mhawer.example.com",
+                      "type": "text"
+                    },
+                    {
+                      "key": "logo",
+                      "type": "file",
+                      "src": [],
+                      "description": "REQUIRED — company logo image file (jpg/png). Attach a file before sending."
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Company",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company/:company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company",
+                    ":company"
+                  ],
+                  "variable": [
+                    {
+                      "key": "company",
+                      "value": "1",
+                      "description": "Company ID"
+                    }
+                  ]
+                },
+                "description": "Show one company. Superadmin only (`company.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Company",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company/:company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company",
+                    ":company"
+                  ],
+                  "variable": [
+                    {
+                      "key": "company",
+                      "value": "1",
+                      "description": "Company ID"
+                    }
+                  ]
+                },
+                "description": "Update a company (multipart, `logo` image required). NOTE: PHP cannot parse multipart bodies on PUT, so this request uses POST with a `_method=PUT` spoof field (Laravel method spoofing) — it hits the registered PUT|PATCH route. Superadmin only (`company.update`).",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "_method",
+                      "value": "PUT",
+                      "type": "text",
+                      "description": "Laravel method spoof — targets the PUT|PATCH route"
+                    },
+                    {
+                      "key": "user_id",
+                      "value": "2",
+                      "type": "text",
+                      "description": "Owner-type user ID"
+                    },
+                    {
+                      "key": "name",
+                      "value": "Mhawer Trading Co. (renamed)",
+                      "type": "text"
+                    },
+                    {
+                      "key": "commercial_register",
+                      "value": "CR-1010101010",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "+966512345678",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "info@mhawer.example.com",
+                      "type": "text"
+                    },
+                    {
+                      "key": "logo",
+                      "type": "file",
+                      "src": [],
+                      "description": "REQUIRED — company logo image file (jpg/png)."
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Company",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company/:company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company",
+                    ":company"
+                  ],
+                  "variable": [
+                    {
+                      "key": "company",
+                      "value": "1",
+                      "description": "Company ID"
+                    }
+                  ]
+                },
+                "description": "Delete a company. Superadmin only (`company.delete`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Company (Owner)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/owner/company",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "owner",
+                    "company"
+                  ]
+                },
+                "description": "Returns the company owned by the authenticated **owner** user (owner role required — superadmins should use Get Company instead)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Company Branches",
+          "description": "Branch CRUD — roles superadmin|owner + `company_branch.*` permissions. JSON bodies.",
+          "item": [
+            {
+              "name": "List Branches",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company-branch",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company-branch"
+                  ]
+                },
+                "description": "List branches (`company_branch.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Branch",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company-branch",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company-branch"
+                  ]
+                },
+                "description": "Create a branch. `address` is optional (`company_branch.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"name\": \"Riyadh HQ\",\n  \"address\": \"King Fahd Rd, Riyadh\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Branch",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company-branch/:company_branch",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company-branch",
+                    ":company_branch"
+                  ],
+                  "variable": [
+                    {
+                      "key": "company_branch",
+                      "value": "1",
+                      "description": "Branch ID"
+                    }
+                  ]
+                },
+                "description": "Show one branch (`company_branch.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Branch",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company-branch/:company_branch",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company-branch",
+                    ":company_branch"
+                  ],
+                  "variable": [
+                    {
+                      "key": "company_branch",
+                      "value": "1",
+                      "description": "Branch ID"
+                    }
+                  ]
+                },
+                "description": "Update a branch (`company_branch.update`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"name\": \"Riyadh HQ — Tower B\",\n  \"address\": \"King Fahd Rd, Riyadh\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Branch",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/company-branch/:company_branch",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "company-branch",
+                    ":company_branch"
+                  ],
+                  "variable": [
+                    {
+                      "key": "company_branch",
+                      "value": "1",
+                      "description": "Branch ID"
+                    }
+                  ]
+                },
+                "description": "Delete a branch (`company_branch.delete`)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Departments",
+          "description": "Department CRUD — roles superadmin|owner + `department.*` permissions. JSON bodies.",
+          "item": [
+            {
+              "name": "List Departments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/department",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "department"
+                  ]
+                },
+                "description": "List departments (`department.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Department",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/department",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "department"
+                  ]
+                },
+                "description": "Create a department. `code` is optional (`department.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"branch_id\": 1,\n  \"name\": \"Engineering\",\n  \"code\": \"ENG\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Department",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/department/:department",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "department",
+                    ":department"
+                  ],
+                  "variable": [
+                    {
+                      "key": "department",
+                      "value": "1",
+                      "description": "Department ID"
+                    }
+                  ]
+                },
+                "description": "Show one department (`department.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Department",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/department/:department",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "department",
+                    ":department"
+                  ],
+                  "variable": [
+                    {
+                      "key": "department",
+                      "value": "1",
+                      "description": "Department ID"
+                    }
+                  ]
+                },
+                "description": "Update a department (`department.update`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"branch_id\": 1,\n  \"name\": \"Engineering & IT\",\n  \"code\": \"ENG\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Department",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/department/:department",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "department",
+                    ":department"
+                  ],
+                  "variable": [
+                    {
+                      "key": "department",
+                      "value": "1",
+                      "description": "Department ID"
+                    }
+                  ]
+                },
+                "description": "Delete a department (`department.delete`)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Employees",
+          "description": "Employee CRUD — roles superadmin|owner + `employee.*` permissions. Store/update are multipart because of the optional `logo` photo field. `user_id` and `employee_number` are now OPTIONAL on create (server auto-creates the user / auto-numbers `EMP-{company}-NNNN`).",
+          "item": [
+            {
+              "name": "List Employees",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee"
+                  ]
+                },
+                "description": "List employees (`employee.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Employee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee"
+                  ]
+                },
+                "description": "Create an employee (multipart — optional `logo` photo). NEW BEHAVIOUR: `user_id` is now OPTIONAL (the server creates the linked user when absent) and `employee_number` is now OPTIONAL (auto-generated as `EMP-{company}-NNNN`). `status` must be `active` or `inactive`. Requires `employee.create`.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "company_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "branch_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "role_id",
+                      "value": "3",
+                      "type": "text",
+                      "description": "Optional — Spatie role ID to assign"
+                    },
+                    {
+                      "key": "department_id",
+                      "value": "1",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "user_id",
+                      "value": "",
+                      "type": "text",
+                      "description": "OPTIONAL — omit and the server creates the user",
+                      "disabled": true
+                    },
+                    {
+                      "key": "employee_number",
+                      "value": "",
+                      "type": "text",
+                      "description": "OPTIONAL — auto EMP-{company}-NNNN when omitted",
+                      "disabled": true
+                    },
+                    {
+                      "key": "iqama_number",
+                      "value": "2456789012",
+                      "type": "text"
+                    },
+                    {
+                      "key": "name",
+                      "value": "Ahmed Al-Salem",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "ahmed.salem@mhawer.example.com",
+                      "type": "text"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "+966512345679",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "status",
+                      "value": "active",
+                      "type": "text",
+                      "description": "active | inactive"
+                    },
+                    {
+                      "key": "position",
+                      "value": "Sales Manager",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "Secret123!",
+                      "type": "text",
+                      "description": "Optional — only used when the server creates the linked user"
+                    },
+                    {
+                      "key": "logo",
+                      "type": "file",
+                      "src": [],
+                      "description": "Optional — employee photo file (jpg/png)."
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Employee",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee/:employee",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee",
+                    ":employee"
+                  ],
+                  "variable": [
+                    {
+                      "key": "employee",
+                      "value": "1",
+                      "description": "Employee ID"
+                    }
+                  ]
+                },
+                "description": "Show one employee (`employee.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Employee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee/:employee",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee",
+                    ":employee"
+                  ],
+                  "variable": [
+                    {
+                      "key": "employee",
+                      "value": "1",
+                      "description": "Employee ID"
+                    }
+                  ]
+                },
+                "description": "Update an employee (multipart, `logo` optional). NOTE: PHP cannot parse multipart bodies on PUT, so this request uses POST with a `_method=PUT` spoof field (Laravel method spoofing) — it hits the registered PUT|PATCH route. Requires `employee.update`.",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "_method",
+                      "value": "PUT",
+                      "type": "text",
+                      "description": "Laravel method spoof — targets the PUT|PATCH route"
+                    },
+                    {
+                      "key": "company_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "branch_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "role_id",
+                      "value": "3",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "department_id",
+                      "value": "1",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "iqama_number",
+                      "value": "2456789012",
+                      "type": "text"
+                    },
+                    {
+                      "key": "name",
+                      "value": "Ahmed Al-Salem",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "ahmed.salem@mhawer.example.com",
+                      "type": "text"
+                    },
+                    {
+                      "key": "phone",
+                      "value": "+966512345679",
+                      "type": "text",
+                      "description": "Optional"
+                    },
+                    {
+                      "key": "status",
+                      "value": "active",
+                      "type": "text",
+                      "description": "active | inactive"
+                    },
+                    {
+                      "key": "position",
+                      "value": "Senior Sales Manager",
+                      "type": "text"
+                    },
+                    {
+                      "key": "logo",
+                      "type": "file",
+                      "src": [],
+                      "description": "Optional — employee photo file (jpg/png)."
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Employee",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee/:employee",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee",
+                    ":employee"
+                  ],
+                  "variable": [
+                    {
+                      "key": "employee",
+                      "value": "1",
+                      "description": "Employee ID"
+                    }
+                  ]
+                },
+                "description": "Delete an employee (`employee.delete`)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Projects",
+          "description": "Project CRUD — roles superadmin|owner + `project.*` permissions. JSON bodies. `employee_ids[]` on store/update syncs assignments.",
+          "item": [
+            {
+              "name": "List Projects",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "project"
+                  ]
+                },
+                "description": "List projects (`project.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Project",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "project"
+                  ]
+                },
+                "description": "Create a project. `start_date`, `end_date`, `employee_ids[]` optional (`project.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"name\": \"iD+ NFC Rollout\",\n  \"start_date\": \"2026-07-01\",\n  \"end_date\": \"2026-12-31\",\n  \"employee_ids\": [\n    1,\n    2\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Project",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/project/:project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "project",
+                    ":project"
+                  ],
+                  "variable": [
+                    {
+                      "key": "project",
+                      "value": "1",
+                      "description": "Project ID"
+                    }
+                  ]
+                },
+                "description": "Show one project (`project.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Project",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/project/:project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "project",
+                    ":project"
+                  ],
+                  "variable": [
+                    {
+                      "key": "project",
+                      "value": "1",
+                      "description": "Project ID"
+                    }
+                  ]
+                },
+                "description": "Update a project (`project.update`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"name\": \"iD+ NFC Rollout — Phase 2\",\n  \"start_date\": \"2026-07-01\",\n  \"end_date\": \"2027-03-31\",\n  \"employee_ids\": [\n    1,\n    2,\n    3\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Project",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/project/:project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "project",
+                    ":project"
+                  ],
+                  "variable": [
+                    {
+                      "key": "project",
+                      "value": "1",
+                      "description": "Project ID"
+                    }
+                  ]
+                },
+                "description": "Delete a project (`project.delete`)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Employee-Project Assignments",
+          "description": "Pivot CRUD linking employees to projects — roles superadmin|owner + `employee_project.*` permissions. QUIRK: the PUT route is registered but the controller has NO `update` method — it is DEPRECATED/BROKEN (500s). Delete + re-create instead.",
+          "item": [
+            {
+              "name": "List Assignments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee-project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee-project"
+                  ]
+                },
+                "description": "List employee-project assignments. Supports `employee_id` / `project_id` query filters (`employee_project.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Assignment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee-project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee-project"
+                  ]
+                },
+                "description": "Assign an employee to a project (`employee_project.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employee_id\": 1,\n  \"project_id\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Assignment",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee-project/:employee_project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee-project",
+                    ":employee_project"
+                  ],
+                  "variable": [
+                    {
+                      "key": "employee_project",
+                      "value": "1",
+                      "description": "Assignment (pivot) ID"
+                    }
+                  ]
+                },
+                "description": "Show one assignment (`employee_project.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "[DEPRECATED/BROKEN] Update Assignment",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee-project/:employee_project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee-project",
+                    ":employee_project"
+                  ],
+                  "variable": [
+                    {
+                      "key": "employee_project",
+                      "value": "1",
+                      "description": "Assignment (pivot) ID"
+                    }
+                  ]
+                },
+                "description": "DEPRECATED / BROKEN — the route is registered in the router but `EmployeeProjectController` has NO `update` method, so this call fails server-side. Kept only for route-coverage completeness. Use Delete + Create Assignment instead. Flagged for removal from the backend.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employee_id\": 1,\n  \"project_id\": 2\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Assignment",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/employee-project/:employee_project",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "employee-project",
+                    ":employee_project"
+                  ],
+                  "variable": [
+                    {
+                      "key": "employee_project",
+                      "value": "1",
+                      "description": "Assignment (pivot) ID"
+                    }
+                  ]
+                },
+                "description": "Remove an employee from a project (`employee_project.delete`)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Business Card Templates",
+          "description": "Card template CRUD — roles superadmin|owner + `business_card_template.*` permissions. JSON bodies.",
+          "item": [
+            {
+              "name": "List Templates",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards-templates",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards-templates"
+                  ]
+                },
+                "description": "List templates (`business_card_template.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Template",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards-templates",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards-templates"
+                  ]
+                },
+                "description": "Create a template. `design_json` and `is_default` optional (`business_card_template.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"name\": \"Corporate Dark\",\n  \"design_json\": {\n    \"theme\": \"dark\",\n    \"accent\": \"#0057FF\",\n    \"layout\": \"vertical\"\n  },\n  \"is_default\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Template",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards-templates/:business_cards_template",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards-templates",
+                    ":business_cards_template"
+                  ],
+                  "variable": [
+                    {
+                      "key": "business_cards_template",
+                      "value": "1",
+                      "description": "Template ID"
+                    }
+                  ]
+                },
+                "description": "Show one template (`business_card_template.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Template",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards-templates/:business_cards_template",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards-templates",
+                    ":business_cards_template"
+                  ],
+                  "variable": [
+                    {
+                      "key": "business_cards_template",
+                      "value": "1",
+                      "description": "Template ID"
+                    }
+                  ]
+                },
+                "description": "Update a template (`business_card_template.update`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_id\": 1,\n  \"name\": \"Corporate Dark v2\",\n  \"design_json\": {\n    \"theme\": \"dark\",\n    \"accent\": \"#00A3FF\",\n    \"layout\": \"vertical\"\n  },\n  \"is_default\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Template",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards-templates/:business_cards_template",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards-templates",
+                    ":business_cards_template"
+                  ],
+                  "variable": [
+                    {
+                      "key": "business_cards_template",
+                      "value": "1",
+                      "description": "Template ID"
+                    }
+                  ]
+                },
+                "description": "Delete a template (`business_card_template.delete`)."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Business Cards",
+          "description": "Business card CRUD + lifecycle — roles superadmin|owner + `business_card.*` permissions.\n\nLifecycle: Create (bulk via `employee_ids[]`) → Submit (to employee for approval) → employee Approves/Rejects via Mobile folder → Publish → Deactivate.\n\nQUIRKS: `/{id}/analytics` is a **POST**, not a GET. Empty-body lifecycle POSTs send `{}` because the WAF rejects empty POST bodies. `expiry_days` on create is undocumented and defaults to 2.",
+          "item": [
+            {
+              "name": "List Business Cards",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards"
+                  ]
+                },
+                "description": "List business cards (`business_card.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Business Cards (bulk)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards"
+                  ]
+                },
+                "description": "Create cards for one or more employees. `nfc_code`, `is_active` optional; `expiry_days` is undocumented and defaults to 2 (`business_card.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employee_ids\": [\n    1,\n    2\n  ],\n  \"template_id\": 1,\n  \"nfc_code\": \"NFC-0001\",\n  \"is_active\": true,\n  \"expiry_days\": 2\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Business Card",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:business_card",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":business_card"
+                  ],
+                  "variable": [
+                    {
+                      "key": "business_card",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Show one card (`business_card.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Business Card",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:business_card",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":business_card"
+                  ],
+                  "variable": [
+                    {
+                      "key": "business_card",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Update a card (`business_card.update`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"template_id\": 1,\n  \"nfc_code\": \"NFC-0001-B\",\n  \"is_active\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Business Card",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:business_card",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":business_card"
+                  ],
+                  "variable": [
+                    {
+                      "key": "business_card",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Delete a card (superadmin|owner role; no per-action permission on this route)."
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Card (for employee approval)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:id/submit",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":id",
+                    "submit"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Moves the card to the employee-approval stage (`business_card.submit`). Sends `{}` — WAF rejects empty POST bodies.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Publish Card",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:id/publish",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":id",
+                    "publish"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Publishes an approved card (`business_card.publish`). Sends `{}` — WAF rejects empty POST bodies.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Deactivate Card",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:id/deactivate",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":id",
+                    "deactivate"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Deactivates a published card (`business_card.deactivate`). Sends `{}` — WAF rejects empty POST bodies.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Track Card Interaction (dashboard)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:id/track",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":id",
+                    "track"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Records an interaction against the card (superadmin|owner). `interaction_type` required (e.g. view, save_contact, share); `source` optional but recommended (e.g. qr, nfc, link).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"interaction_type\": \"view\",\n  \"source\": \"qr\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Card Analytics (POST!)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/business-cards/:id/analytics",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "business-cards",
+                    ":id",
+                    "analytics"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1",
+                      "description": "Business card ID"
+                    }
+                  ]
+                },
+                "description": "Returns interaction analytics for the card. QUIRK: this is a **POST**, not a GET. Sends `{}` — WAF rejects empty POST bodies (superadmin|owner).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Roles & Permissions",
+          "description": "Spatie role CRUD — roles superadmin|owner + `role.*` permissions. `permissions[]` uses permission names like `employee.view`.",
+          "item": [
+            {
+              "name": "List Roles",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "roles"
+                  ]
+                },
+                "description": "List roles with their permissions (`role.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Role",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/roles",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "roles"
+                  ]
+                },
+                "description": "Create a role. `permissions[]` optional — permission name strings (`role.create`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"hr_manager\",\n  \"permissions\": [\n    \"employee.view\",\n    \"employee.create\",\n    \"employee.update\",\n    \"department.view\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Role",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/roles/:role",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "roles",
+                    ":role"
+                  ],
+                  "variable": [
+                    {
+                      "key": "role",
+                      "value": "1",
+                      "description": "Role ID"
+                    }
+                  ]
+                },
+                "description": "Show one role (`role.view`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Role",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/roles/:role",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "roles",
+                    ":role"
+                  ],
+                  "variable": [
+                    {
+                      "key": "role",
+                      "value": "1",
+                      "description": "Role ID"
+                    }
+                  ]
+                },
+                "description": "Update a role and sync its permissions (`role.update`).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"hr_manager\",\n  \"permissions\": [\n    \"employee.view\",\n    \"employee.update\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Role",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/roles/:role",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "roles",
+                    ":role"
+                  ],
+                  "variable": [
+                    {
+                      "key": "role",
+                      "value": "1",
+                      "description": "Role ID"
+                    }
+                  ]
+                },
+                "description": "Delete a role (`role.delete`)."
+              },
+              "response": []
+            },
+            {
+              "name": "Assign Users to Role",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/roles/:role/users",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "roles",
+                    ":role",
+                    "users"
+                  ],
+                  "variable": [
+                    {
+                      "key": "role",
+                      "value": "1",
+                      "description": "Role ID"
+                    }
+                  ]
+                },
+                "description": "Bulk-assigns the role to the given users (superadmin|owner).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_ids\": [\n    2,\n    3\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "description": "User registration from the dashboard — roles superadmin|owner.",
+          "item": [
+            {
+              "name": "Register User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/dashboard/register",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "dashboard",
+                    "register"
+                  ]
+                },
+                "description": "Creates a user account. `user_type` must be one of `owner | employee | superadmin`. Requires superadmin|owner role.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sara Owner\",\n  \"email\": \"sara.owner@mhawer.example.com\",\n  \"user_type\": \"owner\",\n  \"phone\": \"+966512340000\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mobile (Employee)",
+      "description": "Mobile app endpoints — bearer token required, roles **superadmin|employee** + `business_card.*` permissions. Log in with 'Login — Employee (mobile)' first. The employee sees cards authored for them by the admin and approves/rejects them.\n\n**Response envelope**: every JSON endpoint wraps its payload as `{\"success\": bool, \"message\": string, \"data\": mixed}`.\n\n**QUIRKS**:\n- Most validation failures return **HTTP 422 with `success: true` and `data: null`** — read `message` for the error text; do NOT trust `success` alone.\n- Exceptions: `CompanyRequest` (company store/update) and `auth/forgot-password` return `success: false` plus an `errors` object on validation failure.\n- `privacy-policy` / `terms-conditions` return **HTTP 400** on a bad `lang` value.\n- The WAF in front of the server rejects empty POST bodies — every otherwise-empty POST in this collection sends a raw `{}` JSON body on purpose.\n- `dashboard/business-cards/{id}/analytics` is a **POST**, not a GET.\n- `PUT dashboard/employee-project/{id}` is registered in the router but the controller has **no `update` method** — calling it 500s. Marked DEPRECATED/BROKEN below.",
+      "item": [
+        {
+          "name": "My Business Cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile/business-cards",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile",
+                "business-cards"
+              ]
+            },
+            "description": "Lists the authenticated employee's business cards (`business_card.view`)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Business Card",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile/business-cards/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile",
+                "business-cards",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Business card ID"
+                }
+              ]
+            },
+            "description": "Shows one of the employee's cards (`business_card.view`)."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile/business-cards/:id/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile",
+                "business-cards",
+                ":id",
+                "approve"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Business card ID"
+                }
+              ]
+            },
+            "description": "Employee approves a submitted card (`business_card.approve`). Sends `{}` — WAF rejects empty POST bodies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mobile/business-cards/:id/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mobile",
+                "business-cards",
+                ":id",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Business card ID"
+                }
+              ]
+            },
+            "description": "Employee rejects a submitted card with a reason (`business_card.reject`).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejection_reason\": \"Job title is outdated — should be Senior Sales Manager.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "In-app notifications — bearer token required, any authenticated role.\n\n**Response envelope**: every JSON endpoint wraps its payload as `{\"success\": bool, \"message\": string, \"data\": mixed}`.\n\n**QUIRKS**:\n- Most validation failures return **HTTP 422 with `success: true` and `data: null`** — read `message` for the error text; do NOT trust `success` alone.\n- Exceptions: `CompanyRequest` (company store/update) and `auth/forgot-password` return `success: false` plus an `errors` object on validation failure.\n- `privacy-policy` / `terms-conditions` return **HTTP 400** on a bad `lang` value.\n- The WAF in front of the server rejects empty POST bodies — every otherwise-empty POST in this collection sends a raw `{}` JSON body on purpose.\n- `dashboard/business-cards/{id}/analytics` is a **POST**, not a GET.\n- `PUT dashboard/employee-project/{id}` is registered in the router but the controller has **no `update` method** — calling it 500s. Marked DEPRECATED/BROKEN below.",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "description": "Lists the authenticated user's notifications."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/:id/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                ":id",
+                "read"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Notification ID"
+                }
+              ]
+            },
+            "description": "Marks one notification as read. Sends `{}` — WAF rejects empty POST bodies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public (No Auth)",
+      "description": "Public endpoints — **no authentication** (this folder overrides the collection bearer auth with No Auth).\n\nQUIRKS: `card/{slug}` returns an HTML page and `vcard` returns a .vcf file (not the JSON envelope). `privacy-policy`/`terms-conditions` return HTTP 400 on a bad `lang`. Always send `source` on the public track call.\n\n**Response envelope**: every JSON endpoint wraps its payload as `{\"success\": bool, \"message\": string, \"data\": mixed}`.\n\n**QUIRKS**:\n- Most validation failures return **HTTP 422 with `success: true` and `data: null`** — read `message` for the error text; do NOT trust `success` alone.\n- Exceptions: `CompanyRequest` (company store/update) and `auth/forgot-password` return `success: false` plus an `errors` object on validation failure.\n- `privacy-policy` / `terms-conditions` return **HTTP 400** on a bad `lang` value.\n- The WAF in front of the server rejects empty POST bodies — every otherwise-empty POST in this collection sends a raw `{}` JSON body on purpose.\n- `dashboard/business-cards/{id}/analytics` is a **POST**, not a GET.\n- `PUT dashboard/employee-project/{id}` is registered in the router but the controller has **no `update` method** — calling it 500s. Marked DEPRECATED/BROKEN below.",
+      "item": [
+        {
+          "name": "Public Card Page (HTML)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/card/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "card",
+                ":slug"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "ahmed-al-salem-a1b2c3",
+                  "description": "Card slug from the card's public URL / NFC tag"
+                }
+              ]
+            },
+            "description": "Public business-card landing page. Returns **HTML**, not the JSON envelope."
+          },
+          "response": []
+        },
+        {
+          "name": "Download vCard (.vcf)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/business-card/:card/vcard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "business-card",
+                ":card",
+                "vcard"
+              ],
+              "variable": [
+                {
+                  "key": "card",
+                  "value": "1",
+                  "description": "Business card ID"
+                }
+              ]
+            },
+            "description": "Downloads the card as a .vcf vCard file (save-to-contacts). Returns a file, not the JSON envelope."
+          },
+          "response": []
+        },
+        {
+          "name": "Public Card (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cards/:public_url",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cards",
+                ":public_url"
+              ],
+              "variable": [
+                {
+                  "key": "public_url",
+                  "value": "a1b2c3d4",
+                  "description": "Card public_url token"
+                }
+              ]
+            },
+            "description": "Public card data as JSON (used by the web card viewer)."
+          },
+          "response": []
+        },
+        {
+          "name": "Track Public Card Interaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cards/:public_url/track",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cards",
+                ":public_url",
+                "track"
+              ],
+              "variable": [
+                {
+                  "key": "public_url",
+                  "value": "a1b2c3d4",
+                  "description": "Card public_url token"
+                }
+              ]
+            },
+            "description": "Records a public interaction. `interaction_type` required (view, save_contact, share, ...). **Always send `source`** (qr | nfc | link) — omitting it has caused server errors.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interaction_type\": \"view\",\n  \"source\": \"qr\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Privacy Policy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/privacy-policy?lang=en",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "privacy-policy"
+              ],
+              "query": [
+                {
+                  "key": "lang",
+                  "value": "en",
+                  "description": "ar | en — QUIRK: bad value returns HTTP 400"
+                }
+              ]
+            },
+            "description": "Localized privacy policy. QUIRK: invalid `lang` returns HTTP 400 (not 422)."
+          },
+          "response": []
+        },
+        {
+          "name": "Terms & Conditions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/terms-conditions?lang=en",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "terms-conditions"
+              ],
+              "query": [
+                {
+                  "key": "lang",
+                  "value": "en",
+                  "description": "ar | en — QUIRK: bad value returns HTTP 400"
+                }
+              ]
+            },
+            "description": "Localized terms & conditions. QUIRK: invalid `lang` returns HTTP 400 (not 422)."
+          },
+          "response": []
+        },
+        {
+          "name": "Global Constants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/global-constants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "global-constants"
+              ]
+            },
+            "description": "App-wide constants/enums used by the mobile and web clients."
+          },
+          "response": []
+        },
+        {
+          "name": "Contact Us",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/contact-us",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "contact-us"
+              ]
+            },
+            "description": "Public contact information."
+          },
+          "response": []
+        },
+        {
+          "name": "[DEV ONLY] Firebase Notification Test",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications-firebase",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications-firebase"
+              ]
+            },
+            "description": "DEV ONLY — sends a test FCM push from a route closure. Not for production use; **flagged for removal** from the backend."
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "noauth"
+      }
+    }
+  ]
+}

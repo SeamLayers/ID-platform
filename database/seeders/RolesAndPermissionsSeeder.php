@@ -150,6 +150,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'department.view',
             'department.create',
             'department.update',
+            'department.delete',
 
             'employee.view',
             'employee.create',

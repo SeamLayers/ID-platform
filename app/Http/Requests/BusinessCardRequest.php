@@ -33,12 +33,21 @@ class BusinessCardRequest extends FormRequest
                 'array'
             ],
 
-            'employee_ids.*' => [
-                'required',
-                'exists:employees,id',
-                Rule::unique('business_cards', 'employee_id')
-                    ->where(fn ($q) => $q->where('template_id', request('template_id'))),
-            ],
+            'employee_ids.*' => array_merge(
+                [
+                    'required',
+                    'exists:employees,id',
+                ],
+                // The DB has a GLOBAL unique index on employee_id
+                // (business_cards_employee_id_unique) — one card per employee.
+                // The old template-scoped rule let duplicates through validation
+                // and the insert blew up with a raw SQL 500. Enforce the real
+                // constraint on create only (updates don't insert rows, and the
+                // old rule wrongly matched the card's own row on update).
+                $this->isMethod('POST')
+                    ? [Rule::unique('business_cards', 'employee_id')]
+                    : []
+            ),
 
             'template_id' => [
                 'required',
@@ -54,6 +63,15 @@ class BusinessCardRequest extends FormRequest
             'is_active' => [
                 'nullable',
                 'boolean',
+            ],
+
+            // Was previously unvalidated, so validated() silently dropped it and
+            // every card fell back to the 2-day default regardless of input.
+            'expiry_days' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:3650',
             ],
         ];
     }

@@ -65,15 +65,28 @@ VCF;
     /**
      * List business cards
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Honour the dashboard's list filters (status tabs, company picker) and
+        // its per_page (Issue-Cards dialog dropdowns ask for more than 10).
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $cards = BusinessCard::with([
             'employee',
             'template',
             'reviewer'
         ])
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->input('status'));
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereHas('employee', function ($e) use ($request) {
+                    $e->where('company_id', $request->input('company_id'));
+                });
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         return ResponseHelper::success(
             BusinessCardResource::collection($cards),
@@ -128,7 +141,9 @@ VCF;
                 'qr_code' => $codes['qr_code'],
                 'nfc_code' => $codes['nfc_code'],
 
-                'expiry_public_url' => now()->addDays($data['expiry_days'] ?? 2),
+                // Default to one year — the old 2-day default silently killed
+                // every public card link (and NFC/QR tags pointing at it).
+                'expiry_public_url' => now()->addDays($data['expiry_days'] ?? 365),
             ]);
         }
 
@@ -183,7 +198,17 @@ VCF;
     {
         $card = BusinessCard::findOrFail($id);
 
-        $card->update($request->validated());
+        $data = $request->validated();
+
+        // expiry_days isn't a column — map it onto expiry_public_url so an
+        // existing card's lifetime can actually be extended (e.g. reviving
+        // cards created under the old 2-day default).
+        if (isset($data['expiry_days'])) {
+            $data['expiry_public_url'] = now()->addDays((int) $data['expiry_days']);
+            unset($data['expiry_days']);
+        }
+
+        $card->update($data);
 
         return ResponseHelper::success(
             new BusinessCardResource(
@@ -328,6 +353,10 @@ VCF;
                 'string'
             ],
         ]);
+
+        // card_interactions.source is NOT NULL in the schema — default it,
+        // same as the public track endpoint.
+        $validated['source'] = $validated['source'] ?? 'LINK';
 
         $validated['ip_address'] = $request->ip();
 
