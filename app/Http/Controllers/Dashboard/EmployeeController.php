@@ -31,6 +31,9 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $employees = Employee::notDeleted()
             ->with([
                 'company',
@@ -48,7 +51,7 @@ class EmployeeController extends Controller
                 $q->where('branch_id', $request->branch_id);
             })
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         return ResponseHelper::success(
             EmployeeResource::collection($employees),

@@ -65,15 +65,28 @@ VCF;
     /**
      * List business cards
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Honour the dashboard's list filters (status tabs, company picker) and
+        // its per_page (Issue-Cards dialog dropdowns ask for more than 10).
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $cards = BusinessCard::with([
             'employee',
             'template',
             'reviewer'
         ])
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->input('status'));
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereHas('employee', function ($e) use ($request) {
+                    $e->where('company_id', $request->input('company_id'));
+                });
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         return ResponseHelper::success(
             BusinessCardResource::collection($cards),

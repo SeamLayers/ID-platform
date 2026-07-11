@@ -7,6 +7,7 @@ use App\Http\Helpers\ResponseHelper;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class BusinessCardTemplateRequest extends FormRequest
 {
@@ -23,7 +24,11 @@ class BusinessCardTemplateRequest extends FormRequest
 
     public function rules(): array
     {
-        $templateId = $this->route('id');
+        // The apiResource route parameter is {business_cards_template}, not
+        // {id}, so the old $this->route('id') was always null and the unique
+        // rule never excluded the row being edited (a no-op name change 422'd
+        // "already taken"). Resolve the real id and ignore it on update.
+        $templateId = $this->route('business_cards_template') ?? $this->route('id');
 
         return [
 
@@ -36,7 +41,7 @@ class BusinessCardTemplateRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:business_card_templates,name,' . $templateId,
+                Rule::unique('business_card_templates', 'name')->ignore($templateId),
             ],
 
             'design_json' => [

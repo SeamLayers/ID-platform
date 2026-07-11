@@ -6,6 +6,7 @@ use App\Http\Helpers\ResponseHelper;
 use App\Http\Resources\CompanyResource;
 use App\Models\Company;
 use App\Http\Requests\CompanyRequest;
+use Illuminate\Http\Request;
 
 class CompanyController extends Controller
 {
@@ -21,13 +22,16 @@ class CompanyController extends Controller
         $this->middleware('permission:company.delete')->only(['destroy']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $companies = Company::notDeleted()->with([
             'owner',
             'employees',
             'branches'
-        ])->latest()->paginate(10);
+        ])->latest()->paginate($perPage);
 
         return ResponseHelper::success(
             CompanyResource::collection($companies),
