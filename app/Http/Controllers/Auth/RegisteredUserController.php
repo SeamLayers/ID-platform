@@ -117,10 +117,8 @@ Google Play / Apple Store";
             }
             if ($validated['user_type'] === User::TYPE_OWNER  ) {
 
-                $message = "Your account has been created successfully.
-
-                    Email: {$validated['email']}
-                    Temporary Password: {$plainPassword}
+                $message = "Your account has been created successfully. Email: {$validated['email']}
+                    Temporary Password: ({$plainPassword})
                     Please log in to the application and change your password within 48 hours.";
 
                 try {
