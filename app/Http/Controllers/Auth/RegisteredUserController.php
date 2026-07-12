@@ -25,6 +25,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\SendOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Resources\UserResource;
 class RegisteredUserController extends Controller
 {
@@ -290,6 +291,37 @@ Google Play / Apple Store";
         return ResponseHelper::success(
             new UserResource($user),
             __('messages.profile_retrieved')
+        );
+    }
+
+    /**
+     * Change the authenticated user's password.
+     *
+     * Used by the forced first-login reset (temporary password → a password of
+     * the user's own) and by the normal change-password action. Clears the
+     * must_reset_password flag and the 48h temp-password expiry on success.
+     */
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! Hash::check($request->input('current_password'), $user->password)) {
+            return ResponseHelper::error(
+                __('messages.current_password_incorrect'),
+                null,
+                422
+            );
+        }
+
+        $user->update([
+            'password' => Hash::make($request->input('password')),
+            'must_reset_password' => false,
+            'expire_password' => null,
+        ]);
+
+        return ResponseHelper::success(
+            null,
+            __('messages.password_changed')
         );
     }
 

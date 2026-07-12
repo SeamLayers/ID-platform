@@ -26,10 +26,18 @@ class CompanyRequest extends FormRequest
         $isUpdate  = ! is_null($companyId);
 
         return [
-            'user_id' => [
+            // On create the owner LOGIN account is provisioned here (name/email/
+            // phone → a new `owner` user + temp password), so the superadmin no
+            // longer types an existing user id. On update the owner is already
+            // linked and left untouched.
+            'owner_name'  => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:255'],
+            'owner_email' => [
                 $isUpdate ? 'sometimes' : 'required',
-                'exists:users,id,user_type,owner',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email'),
             ],
+            'owner_phone' => ['nullable', 'string', 'max:20'],
             'name' => 'required|string|max:255',
             'commercial_register' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
@@ -55,8 +63,9 @@ class CompanyRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'user_id.required' => __('messages.user_required'),
-            'user_id.exists' => __('messages.user_not_found'),
+            'owner_name.required'  => __('messages.owner_name_required'),
+            'owner_email.required' => __('messages.owner_email_required'),
+            'owner_email.unique'   => __('messages.owner_email_taken'),
 
             'email.unique' => __('messages.email_already_exists'),
 

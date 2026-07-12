@@ -52,6 +52,9 @@ Route::prefix('v1')->group( function () {
             // user_type/roles/permissions) for any authenticated role. The
             // mobile profile screen uses this to refresh on pull-to-refresh.
             Route::get('profile', [RegisteredUserController::class, 'profileData'])->name('profile');
+            // Authenticated password change — used by the forced first-login
+            // reset (temp password → own password) and the normal change action.
+            Route::post('change-password', [RegisteredUserController::class, 'changePassword'])->name('change-password');
         });
     });
 

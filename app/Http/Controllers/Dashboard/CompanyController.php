@@ -5,8 +5,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
 use App\Http\Resources\CompanyResource;
 use App\Models\Company;
+use App\Models\User;
 use App\Http\Requests\CompanyRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class CompanyController extends Controller
 {
@@ -46,17 +52,80 @@ class CompanyController extends Controller
     {
         $data = $request->validated();
 
-        unset($data['logo']); // remove file from DB insert
-        $data['user_id'] = $request->user_id;
-        $company = Company::create($data);
+        $tempPassword    = null;
+        $credentialsMail = null;
 
-        // Upload logo
-        if ($request->hasFile('logo')) {
-            $company->addMediaFromRequest('logo')
-                ->toMediaCollection('company_logo');
+        // Provision the owner LOGIN account + the company in one transaction
+        // (mirrors EmployeeController@store). The owner gets a temporary
+        // password, a 48h expiry, and must_reset_password so the dashboard
+        // forces a reset on first login.
+        $company = DB::transaction(function () use ($request, $data, &$tempPassword, &$credentialsMail) {
+
+            $plainPassword = Str::password(8);
+
+            $owner = User::create([
+                'name'                => $data['owner_name'],
+                'email'               => $data['owner_email'],
+                'password'            => Hash::make($plainPassword),
+                'ip_address'          => $request->ip(),
+                'user_type'           => User::TYPE_OWNER,
+                'phone'               => $data['owner_phone'] ?? null,
+                'expire_password'     => now()->addHours(48),
+                'must_reset_password' => true,
+            ]);
+
+            $owner->assignRole(User::TYPE_OWNER);
+
+            $tempPassword = $plainPassword;
+
+            $credentialsMail = [
+                'to'   => $owner->email,
+                'body' => "Your ID Plus company owner account has been created.
+
+Login (dashboard): {$owner->email}
+Temporary Password: {$plainPassword}
+
+Please sign in to the dashboard and set your own password within 48 hours.",
+            ];
+
+            $company = Company::create([
+                'user_id'             => $owner->id,
+                'name'                => $data['name'],
+                'email'               => $data['email'],
+                'phone'               => $data['phone'],
+                'commercial_register' => $data['commercial_register'] ?? null,
+            ]);
+
+            // Upload logo
+            if ($request->hasFile('logo')) {
+                $company->addMediaFromRequest('logo')
+                    ->toMediaCollection('company_logo');
+            }
+
+            return $company;
+        });
+
+        // Send credentials AFTER commit so a rollback never emails a password
+        // for an owner/company that didn't get created.
+        if ($credentialsMail !== null) {
+            try {
+                Mail::raw($credentialsMail['body'], function ($mail) use ($credentialsMail) {
+                    $mail->to($credentialsMail['to'])
+                         ->subject('Your ID Plus owner account credentials');
+                });
+            } catch (\Throwable $mailException) {
+                Log::error('Owner Credentials Email Sending Failed', [
+                    'email' => $credentialsMail['to'],
+                    'error' => $mailException->getMessage(),
+                ]);
+            }
         }
+
         return ResponseHelper::success(
-            $company->load(['owner', 'employees', 'branches']),
+            [
+                'company'       => new CompanyResource($company->load(['owner', 'employees', 'branches'])),
+                'temp_password' => $tempPassword,
+            ],
             __('messages.data_saved'),
             201
         );

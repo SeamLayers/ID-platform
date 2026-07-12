@@ -4,6 +4,11 @@ return [
     'validation_failed' => 'Validation failed',
     'unauthenticated' => 'Unauthenticated user',
     // Auth
+    'current_password_incorrect' => 'The current password is incorrect',
+    'password_changed' => 'Password changed successfully',
+    'owner_name_required' => 'The owner name is required',
+    'owner_email_required' => 'The owner email is required',
+    'owner_email_taken' => 'This owner email is already in use',
     'login_success' => 'Login successful',
     'logout_success' => 'Logged out successfully',
     'invalid_credentials' => 'The provided credentials are incorrect',

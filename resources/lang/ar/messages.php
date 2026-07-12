@@ -3,6 +3,11 @@
 return [
     'validation_failed' => 'فشل التحقق من البيانات',
     'unauthenticated' => 'المستخدم غير مصرح له',
+    'current_password_incorrect' => 'كلمة المرور الحالية غير صحيحة',
+    'password_changed' => 'تم تغيير كلمة المرور بنجاح',
+    'owner_name_required' => 'اسم المالك مطلوب',
+    'owner_email_required' => 'بريد المالك الإلكتروني مطلوب',
+    'owner_email_taken' => 'بريد المالك الإلكتروني مستخدم بالفعل',
 
 
 
