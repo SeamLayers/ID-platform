@@ -179,7 +179,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'business_card_template.update',
             'business_card_template.delete',
 
-            'role.view',
+            // NOTE: owners intentionally get NO role.* permission. Roles are the
+            // GLOBAL platform roles; managing them belongs to superadmin only.
         ]);
 
         // Manager → operational access
