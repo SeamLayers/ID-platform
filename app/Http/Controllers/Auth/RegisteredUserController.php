@@ -90,10 +90,10 @@ Google Play / Apple Store";
 
                 try {
 
-//                SmsService::sendSMS(
-//                    $validated['phone'],
-//                    $message
-//                );
+                SmsService::sendSMS(
+                    $validated['phone'],
+                    $message
+                );
 
                 } catch (\Throwable $smsException) {
 
@@ -117,16 +117,11 @@ Google Play / Apple Store";
             }
             if ($validated['user_type'] === User::TYPE_OWNER  ) {
 
-                $message = "Your account has been created successfully. Email: {$validated['email']}
-                    Temporary Password: ({$plainPassword})
-                    Please log in to the application and change your password within 48 hours.";
+                $message = "our owner account is ready.\nEmail: {$validated['email']}\nTemporary Password: {$plainPassword}\nPlease log in and change your password.";
 
                 try {
 
-//                SmsService::sendSMS(
-//                    $validated['phone'],
-//                    $message
-//                );
+                SmsService::sendSMS($validated['phone'], $message);
 
                 } catch (\Throwable $smsException) {
 
@@ -221,7 +216,7 @@ Google Play / Apple Store";
             'is_used' => false,
         ]);
 
-        // SmsService::send($countryCode.$phoneNumber, $otp);
+         SmsService::sendSMS($countryCode.$phoneNumber, $otp);
 
         return ResponseHelper::success([
             'phone' => "{$countryCode}{$phoneNumber}",
