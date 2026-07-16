@@ -11,6 +11,7 @@
     <tr>
         <td align="center">
 
+
             <table width="500" cellpadding="0" cellspacing="0" style="max-width:500px; background:#ffffff; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.08); overflow:hidden;">
 
                 <!-- Header -->
