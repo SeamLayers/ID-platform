@@ -23,7 +23,10 @@ class CompanyBranchController extends Controller
     public function index()
     {
         $branches = CompanyBranch::notDeleted()
-            ->with(['company'])
+            ->with('company')
+            ->whereHas('company', function ($query) {
+                $query->where('user_id', auth()->id());
+            })
             ->latest()
             ->paginate(10);
 
