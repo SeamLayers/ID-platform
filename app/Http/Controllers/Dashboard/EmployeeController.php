@@ -42,8 +42,11 @@ class EmployeeController extends Controller
                 'department',
                 'user',
                 'projects',
-                'businessCard'
+                'businessCard',
             ])
+            ->whereHas('company', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->when($request->company_id, function ($q) use ($request) {
                 $q->where('company_id', $request->company_id);
             })
