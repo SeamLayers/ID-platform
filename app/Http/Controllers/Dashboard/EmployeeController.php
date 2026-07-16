@@ -8,6 +8,7 @@ use App\Http\Requests\EmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -149,8 +150,9 @@ class EmployeeController extends Controller
                 // commits — sending inside it means a rollback (unique-index
                 // race, media failure) emails a password for an account that
                 // never got created.
+                // Prepare email
                 $credentialsMail = [
-                    'to' => $user->email,
+                    'to'   => $user->email,
                     'body' => "Your account has been created successfully.
 
 Email: {$user->email}
@@ -161,6 +163,21 @@ Please log in to the application and change your password within 48 hours.
 Download ID Plus App:
 Google Play / Apple Store",
                 ];
+
+// Send Email
+                Mail::raw($credentialsMail['body'], function ($message) use ($credentialsMail) {
+                    $message->to($credentialsMail['to'])
+                        ->subject('Your ID Plus Account Credentials');
+                });
+
+// SMS text
+                $sms_message = "Your ID Plus account has been created. Email: {$user->email}, Temporary Password: {$plainPassword}. Please change your password within 48 hours.";
+
+// Send SMS
+                SmsService::sendSMS(
+                    $user->phone,
+                    $sms_message
+                );
             }
 
             // Never mass-assign the login password onto the employee row.
@@ -194,6 +211,7 @@ Google Play / Apple Store",
                 ]);
             }
         }
+
 
         $employee->load([
             'company',
