@@ -30,6 +30,9 @@ class ProjectController extends Controller
         $projects = Project::with([
             'employees',
         ])
+            ->whereHas('company', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->when($request->company_id, function ($q) use ($request) {
                 $q->where('company_id', $request->company_id);
             })
@@ -44,7 +47,6 @@ class ProjectController extends Controller
             __('messages.data_retrieved')
         );
     }
-
     /**
      * Create project
      */
