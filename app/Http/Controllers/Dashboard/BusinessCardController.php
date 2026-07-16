@@ -67,22 +67,23 @@ VCF;
      */
     public function index(Request $request)
     {
-        // Honour the dashboard's list filters (status tabs, company picker) and
-        // its per_page (Issue-Cards dialog dropdowns ask for more than 10).
         $perPage = (int) $request->input('per_page', 10);
         $perPage = $perPage > 0 ? min($perPage, 200) : 10;
 
         $cards = BusinessCard::with([
             'employee',
             'template',
-            'reviewer'
+            'reviewer',
         ])
+            ->whereHas('employee.company', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('status', $request->input('status'));
+                $q->where('status', $request->status);
             })
             ->when($request->filled('company_id'), function ($q) use ($request) {
                 $q->whereHas('employee', function ($e) use ($request) {
-                    $e->where('company_id', $request->input('company_id'));
+                    $e->where('company_id', $request->company_id);
                 });
             })
             ->latest()
@@ -93,7 +94,6 @@ VCF;
             __('messages.data_retrieved')
         );
     }
-
     /**
      * Store new business card
      */

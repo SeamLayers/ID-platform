@@ -25,8 +25,11 @@ class EmployeeProjectController extends Controller
     {
         $assignments = EmployeeProject::with([
             'employee',
-            'project'
+            'project',
         ])
+            ->whereHas('employee.company', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->when($request->employee_id, function ($q) use ($request) {
                 $q->where('employee_id', $request->employee_id);
             })
@@ -41,7 +44,6 @@ class EmployeeProjectController extends Controller
             __('messages.data_retrieved')
         );
     }
-
     /**
      * Assign employee to project
      */

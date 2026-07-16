@@ -35,6 +35,9 @@ class BusinessCardTemplateController extends Controller
         $perPage = $perPage > 0 ? min($perPage, 200) : 10;
 
         $templates = BusinessCardTemplate::with('company')
+            ->whereHas('company', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->when($request->filled('company_id'), function ($q) use ($request) {
                 $q->where('company_id', $request->input('company_id'));
             })
