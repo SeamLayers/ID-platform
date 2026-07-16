@@ -29,6 +29,9 @@ class DepartmentController extends Controller
                 'company',
                 'employees'
             ])
+            ->whereHas('company', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->when($request->company_id, function ($q) use ($request) {
                 $q->where('company_id', $request->company_id);
             })
@@ -43,7 +46,6 @@ class DepartmentController extends Controller
             __('messages.data_retrieved')
         );
     }
-
     /**
      * Store department
      */
