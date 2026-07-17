@@ -32,7 +32,7 @@ class BusinessCard extends Model
         'reviewed_at' => 'datetime',
         // Cast so callers can compare via Carbon (e.g. `expiry_public_url->isPast()`)
         // and the resource serialises consistently.
-        'expiry_public_url' => 'date',
+        'expiry_public_url' => 'datetime',
     ];
 
     /*
