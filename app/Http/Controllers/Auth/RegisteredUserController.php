@@ -281,6 +281,9 @@ Google Play / Apple Store";
         $user = auth()->user()->load([
             'employee.company',
             'employee.businessCard',
+            'employee.branch',
+            'employee.department',
+            'employee.projects',
         ]);
 
         return ResponseHelper::success(
