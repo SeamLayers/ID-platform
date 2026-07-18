@@ -74,7 +74,8 @@ VCF;
             'employee',
             'template',
             'reviewer',
-        ])->whereHas('employee.company', function ($q) {
+        ])
+            ->whereHas('employee.company', function ($q) {
                 $q->where('user_id', auth()->id());
             })
             ->when($request->filled('status'), function ($q) use ($request) {
