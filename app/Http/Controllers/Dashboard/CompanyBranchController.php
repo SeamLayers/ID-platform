@@ -29,7 +29,7 @@ class CompanyBranchController extends Controller
             })
             ->latest()
             ->paginate(10);
-
+dd($branches);
 
         return ResponseHelper::success(
             CompanyBranchResource::collection($branches),
