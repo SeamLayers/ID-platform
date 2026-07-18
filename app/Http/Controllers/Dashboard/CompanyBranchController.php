@@ -30,6 +30,7 @@ class CompanyBranchController extends Controller
             ->latest()
             ->paginate(10);
 
+
         return ResponseHelper::success(
             CompanyBranchResource::collection($branches),
             __('messages.data_retrieved')
