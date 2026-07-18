@@ -22,6 +22,8 @@ class CompanyBranchController extends Controller
      */
     public function index()
     {
+
+
         $branches = CompanyBranch::notDeleted()
             ->with('company')
             ->whereHas('company', function ($query) {
