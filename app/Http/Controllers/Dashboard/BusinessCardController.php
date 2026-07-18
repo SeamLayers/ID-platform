@@ -74,12 +74,13 @@ VCF;
             'employee',
             'template',
             'reviewer',
-        ])
-            ->whereHas('employee.company', function ($q) {
+        ])->whereHas('employee.company', function ($q) {
                 $q->where('user_id', auth()->id());
             })
             ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('status', $request->status);
+                $q->where('status', $request->status)->whereHas('employee.company', function ($q) {
+                    $q->where('user_id', auth()->id());
+                });
             })
             ->when($request->filled('company_id'), function ($q) use ($request) {
                 $q->whereHas('employee', function ($e) use ($request) {
