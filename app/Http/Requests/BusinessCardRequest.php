@@ -36,7 +36,7 @@ class BusinessCardRequest extends FormRequest
             'employee_ids.*' => array_merge(
                 [
                     'required',
-//                    'exists:employees,id',
+                    'exists:employees,id',
                 ],
                 // The DB has a GLOBAL unique index on employee_id
                 // (business_cards_employee_id_unique) — one card per employee.
@@ -45,7 +45,7 @@ class BusinessCardRequest extends FormRequest
                 // constraint on create only (updates don't insert rows, and the
                 // old rule wrongly matched the card's own row on update).
                 $this->isMethod('POST')
-                    ? []
+                    ? [Rule::unique('business_cards', 'employee_id')]
                     : []
             ),
 
