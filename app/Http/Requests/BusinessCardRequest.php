@@ -44,9 +44,9 @@ class BusinessCardRequest extends FormRequest
                 // and the insert blew up with a raw SQL 500. Enforce the real
                 // constraint on create only (updates don't insert rows, and the
                 // old rule wrongly matched the card's own row on update).
-                $this->isMethod('POST')
-                    ? [Rule::unique('business_cards', 'employee_id')]
-                    : []
+//                $this->isMethod('POST')
+//                    ? [Rule::unique('business_cards', 'employee_id')]
+//                    : []
             ),
 
             'template_id' => [
