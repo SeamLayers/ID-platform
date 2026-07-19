@@ -61,7 +61,9 @@ class CardCodeService
 
         return [
             'public_url' => $publicUrl,
-            'qr_code'    => $this->generateQr($fullUrl, $employee->employee_number),
+            // ?src=qr so a scan of this image is attributed to QR in the
+            // dashboard's source mix rather than counted as a plain link visit.
+            'qr_code'    => $this->generateQr($fullUrl . '?src=qr', $employee->employee_number),
             'nfc_code'   => $this->generateNfcCode($employee),
         ];
     }

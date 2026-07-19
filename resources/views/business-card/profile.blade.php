@@ -354,10 +354,20 @@
         try {
             var slug = @js($card->public_url);
             var endpoint = new URL('../cards/' + encodeURIComponent(slug) + '/track', window.location.href);
+
+            // How the visitor got here. QR images and NFC payloads carry
+            // ?src=qr / ?src=nfc, so the dashboard's scan count and source mix
+            // reflect reality instead of reporting every visit as a link.
+            var src = 'LINK';
+            try {
+                var raw = (new URLSearchParams(window.location.search).get('src') || '').toUpperCase();
+                if (raw === 'QR' || raw === 'NFC') { src = raw; }
+            } catch (e) { /* no-op */ }
+
             fetch(endpoint.toString(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ interaction_type: 'view', source: 'LINK' }),
+                body: JSON.stringify({ interaction_type: 'view', source: src }),
                 keepalive: true
             }).catch(function () {});
         } catch (e) { /* no-op */ }

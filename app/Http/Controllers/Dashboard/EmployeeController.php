@@ -124,8 +124,9 @@ class EmployeeController extends Controller
 
         $tempPassword = null;
         $credentialsMail = null;
+        $credentialsSms = null;
 
-        $employee = DB::transaction(function () use ($request, $data, &$tempPassword, &$credentialsMail) {
+        $employee = DB::transaction(function () use ($request, $data, &$tempPassword, &$credentialsMail, &$credentialsSms) {
 
             // Seamless path: provision the login account when none is linked.
             if (empty($data['user_id'])) {
@@ -171,20 +172,11 @@ Download ID Plus App:
 Google Play / Apple Store",
                 ];
 
-// Send Email
-                Mail::raw($credentialsMail['body'], function ($message) use ($credentialsMail) {
-                    $message->to($credentialsMail['to'])
-                        ->subject('Your ID Plus Account Credentials');
-                });
-
-// SMS text
-                $sms_message = "Your ID Plus account has been created. Email: {$user->email}, Temporary Password: {$plainPassword}. Please change your password within 48 hours.";
-
-// Send SMS
-                SmsService::sendSMS(
-                    $user->phone,
-                    $sms_message
-                );
+                // SMS goes out after the commit too, for the same reason.
+                $credentialsSms = [
+                    'to'   => $user->phone,
+                    'body' => "Your ID Plus account has been created. Email: {$user->email}, Temporary Password: {$plainPassword}. Please change your password within 48 hours.",
+                ];
             }
 
             // Never mass-assign the login password onto the employee row.
@@ -215,6 +207,17 @@ Google Play / Apple Store",
                 Log::error('Credentials Email Sending Failed', [
                     'email' => $credentialsMail['to'],
                     'error' => $mailException->getMessage(),
+                ]);
+            }
+        }
+
+        if ($credentialsSms !== null && ! empty($credentialsSms['to'])) {
+            try {
+                SmsService::sendSMS($credentialsSms['to'], $credentialsSms['body']);
+            } catch (\Throwable $smsException) {
+                Log::error('Credentials SMS Sending Failed', [
+                    'phone' => $credentialsSms['to'],
+                    'error' => $smsException->getMessage(),
                 ]);
             }
         }

@@ -64,6 +64,37 @@ VCF;
             );
     }
     /**
+     * Restrict a card query to what the authenticated viewer may see.
+     *
+     * - superadmin  → every card on the platform.
+     * - owner       → cards of employees in the companies they own.
+     * - employee    → their own card only.
+     *
+     * The old scope was owner-only (`employee.company.user_id = auth()->id()`),
+     * which silently returned an EMPTY list to both employees and superadmins:
+     * companies.user_id is always the owner's id, so an employee could never
+     * match it and the mobile "pending approvals" screen was always empty.
+     */
+    private function scopeToViewer($query)
+    {
+        $user = auth()->user();
+
+        if ($user?->hasRole('superadmin')) {
+            return $query;
+        }
+
+        if ($user?->hasRole('owner')) {
+            return $query->whereHas('employee.company', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
+
+        return $query->whereHas('employee', function ($q) use ($user) {
+            $q->where('user_id', $user?->id);
+        });
+    }
+
+    /**
      * List business cards
      */
     public function index(Request $request)
@@ -71,19 +102,14 @@ VCF;
         $perPage = (int) $request->input('per_page', 10);
         $perPage = $perPage > 0 ? min($perPage, 200) : 10;
 
-        $cards = BusinessCard::with([
+        $cards = $this->scopeToViewer(BusinessCard::with([
             'employee',
             'template',
             'reviewer',
 
-        ])
-            ->whereHas('employee.company', function ($q) {
-                $q->where('user_id', auth()->id());
-            })
+        ]))
             ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('status', $request->status)->whereHas('employee.company', function ($q) {
-                    $q->where('user_id', auth()->id());
-                });
+                $q->where('status', $request->status);
             })
             ->when($request->filled('company_id'), function ($q) use ($request) {
                 $q->whereHas('employee', function ($e) use ($request) {
@@ -166,11 +192,11 @@ VCF;
      */
     public function show($id)
     {
-        $card = BusinessCard::with([
+        $card = $this->scopeToViewer(BusinessCard::with([
             'employee',
             'template',
             'reviewer'
-        ])
+        ]))
             ->findOrFail($id);
 
         return ResponseHelper::success(
@@ -189,6 +215,18 @@ VCF;
             ->where('public_url', $slug)
             ->where('is_active', true)
             ->firstOrFail();
+
+        // The public page must obey the same gate as the JSON endpoint:
+        // a card only goes live once it is PUBLISHED and still in date.
+        // Previously any draft/submitted/rejected card was already publicly
+        // readable the moment it was created, so "publish makes it live"
+        // wasn't actually true.
+        if (
+            $card->status !== 'published'
+            || ($card->expiry_public_url && $card->expiry_public_url->isPast())
+        ) {
+            abort(404);
+        }
 
         return view('business-card.profile', [
             'employee' => $card->employee,
@@ -270,12 +308,19 @@ VCF;
      */
     public function approve($id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped, not a bare findOrFail: approval is the employee's own
+        // decision about their own card. Without this any employee could
+        // approve any other employee's card by guessing an id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $card->update([
             'status'      => 'approved',
             'reviewed_at' => now(),
-            'reviewed_by' => auth()->id(),
+            // reviewed_by is a FOREIGN KEY to employees, not users. Storing
+            // auth()->id() (a users id) violates the constraint — MySQL 500s on
+            // approve — and made the `reviewer` relation resolve to whichever
+            // unrelated employee happened to share that id.
+            'reviewed_by' => auth()->user()?->employee?->id,
         ]);
 
         // Tell the company owner the employee approved their card.
@@ -301,12 +346,14 @@ VCF;
 
         $data = $request->validated();
 
-        $card = BusinessCard::findOrFail($id);
+        // Same ownership scope as approve().
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $card->update([
             'status'            => 'rejected',
             'reviewed_at'       => now(),
-            'reviewed_by'       => auth()->id(),
+            // FK to employees, not users — see approve().
+            'reviewed_by'       => auth()->user()?->employee?->id,
             'rejection_reason'  => $data['rejection_reason'],
         ]);
 

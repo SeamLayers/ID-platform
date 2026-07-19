@@ -8,6 +8,7 @@ use App\Mail\SendOtpMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -44,14 +45,24 @@ class PasswordResetLinkController extends Controller
             'otp_expires_at' => now()->addMinutes(10),
         ]);
 
-        // 5️⃣ Send OTP email
-        Mail::to($user->email)->send(new SendOtpMail($otp));
+        // 5️⃣ Send OTP email. A dead SMTP host must not 500 the endpoint — the
+        // OTP is already stored, so the reset still completes once mail is back.
+        try {
+            Mail::to($user->email)->send(new SendOtpMail($otp));
+        } catch (\Throwable $e) {
+            Log::error('Reset OTP email failed', [
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
-        // DEV/DEMO ONLY: returning the user model exposes data.reset_otp so the
-        // mobile app can auto-fill the OTP field. REMOVE FOR PRODUCTION HARDENING —
-        // the OTP should only be delivered via the email above, never in the API body.
+        // Deliberately returns NOTHING. Echoing the user model exposed
+        // data.reset_otp, which meant anyone who could name an email address
+        // could read its reset code and take over the account (superadmin
+        // included). The code is now email-only; the mobile app already treats
+        // auto-fill as optional and falls back to manual entry.
         return ResponseHelper::success(
-            $user,
+            null,
             __('messages.otp_sent')
         );
     }
