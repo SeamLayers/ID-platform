@@ -68,6 +68,24 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * Refresh the authenticated user's FCM / web-push device token.
+     *
+     * Browsers grant notification permission asynchronously (usually after the
+     * login POST already stored a placeholder), so the dashboard calls this once
+     * it has a real FCM token from getToken(). Mobile can use it on token refresh.
+     */
+    public function updateDeviceToken(Request $request)
+    {
+        $validated = $request->validate([
+            'device_token' => ['required', 'string', 'max:500'],
+        ]);
+
+        $request->user()->update(['device_token' => $validated['device_token']]);
+
+        return ResponseHelper::success(null, __('messages.data_updated'));
+    }
+
+    /**
      * Logout
      */
     public function logout(Request $request)

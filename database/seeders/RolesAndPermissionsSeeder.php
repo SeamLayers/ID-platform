@@ -146,6 +146,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'company_branch.view',
             'company_branch.create',
             'company_branch.update',
+            'company_branch.delete',
 
             'department.view',
             'department.create',
@@ -155,13 +156,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'employee.view',
             'employee.create',
             'employee.update',
+            'employee.delete',
 
             'project.view',
             'project.create',
             'project.update',
+            'project.delete',
 
             'employee_project.view',
             'employee_project.create',
+            'employee_project.delete',
 
             // Owners can issue, edit, submit, publish and retire cards for
             // their company's employees. Approval/rejection are explicitly

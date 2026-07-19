@@ -16,7 +16,8 @@ class ProjectController extends Controller
         $this->middleware('permission:project.view')->only(['index', 'show']);
         $this->middleware('permission:project.create')->only(['store']);
         $this->middleware('permission:project.update')->only(['update']);
-        $this->middleware('permission:project.delete')->only(['destroy']);
+        // destroy: role (route = superadmin|owner) + in-method tenancy scoping.
+        // Not gated on project.delete so owners don't need the seeder re-run.
     }
 
     /**
@@ -29,6 +30,7 @@ class ProjectController extends Controller
 
         $projects = Project::with([
             'employees',
+            'company',
         ])
             ->whereHas('company', function ($q) {
                 $q->where('user_id', auth()->id());
@@ -60,7 +62,7 @@ class ProjectController extends Controller
         }
 
         return ResponseHelper::success(
-            $project->load('employees'),
+            $project->load(['employees', 'company']),
             __('messages.data_saved'),
             201
         );
@@ -71,7 +73,7 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
-        $project = Project::with('employees')
+        $project = Project::with(['employees', 'company'])
             ->findOrFail($id);
 
         return ResponseHelper::success(
@@ -87,6 +89,16 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
 
+        // Tenancy scoping: owners may only edit their own company's projects
+        // (prevents a cross-tenant IDOR write via a guessed project id).
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $project->company_id)) {
+                return ResponseHelper::error(__('messages.company_scope_forbidden'), null, 403);
+            }
+        }
+
         $project->update($request->validated());
 
         // Sync employees if provided
@@ -95,7 +107,7 @@ class ProjectController extends Controller
         }
 
         return ResponseHelper::success(
-            $project->load('employees'),
+            $project->load(['employees', 'company']),
             __('messages.data_updated')
         );
     }
@@ -106,6 +118,19 @@ class ProjectController extends Controller
     public function destroy($id)
     {
         $project = Project::findOrFail($id);
+
+        // Tenancy scoping: owners may only delete their own company's projects.
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $project->company_id)) {
+                return ResponseHelper::error(
+                    __('messages.company_scope_forbidden'),
+                    null,
+                    403
+                );
+            }
+        }
 
         $project->delete();
 

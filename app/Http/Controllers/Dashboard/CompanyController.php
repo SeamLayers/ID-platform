@@ -7,6 +7,7 @@ use App\Http\Resources\CompanyResource;
 use App\Models\Company;
 use App\Models\User;
 use App\Http\Requests\CompanyRequest;
+use App\Http\Requests\OwnerCompanyUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,7 +25,7 @@ class CompanyController extends Controller
     {
         $this->middleware('permission:company.view')->only(['index', 'show']);
         $this->middleware('permission:company.create')->only(['store']);
-        $this->middleware('permission:company.update')->only(['update']);
+        $this->middleware('permission:company.update')->only(['update', 'updateOwn']);
         $this->middleware('permission:company.delete')->only(['destroy']);
     }
 
@@ -186,5 +187,40 @@ Please sign in to the dashboard and set your own password within 48 hours.",
         $company->delete();
         return ResponseHelper::success($company,__('messages.data_deleted'));
 
+    }
+
+    /**
+     * Owner self-service update of THEIR OWN company.
+     *
+     * Tenancy-safe: the company is resolved from the authenticated user
+     * (user_id === auth id), never from a client-supplied id, so an owner can
+     * only ever edit the company they own. The owner login account is left
+     * untouched (owners maintain public company details only).
+     */
+    public function updateOwn(OwnerCompanyUpdateRequest $request)
+    {
+        $company = Company::where('user_id', auth()->id())->first();
+
+        if (! $company) {
+            return ResponseHelper::error(
+                __('messages.company_not_found'),
+                null,
+                404
+            );
+        }
+
+        $company->update($request->validated());
+
+        // Replace the logo only when a new file is uploaded.
+        if ($request->hasFile('logo')) {
+            $company->clearMediaCollection('company_logo');
+            $company->addMediaFromRequest('logo')
+                ->toMediaCollection('company_logo');
+        }
+
+        return ResponseHelper::success(
+            new CompanyResource($company->fresh()->load(['owner', 'employees', 'branches'])),
+            __('messages.data_updated')
+        );
     }
 }

@@ -16,7 +16,9 @@ class DepartmentController extends Controller
         $this->middleware('permission:department.view')->only(['index', 'show']);
         $this->middleware('permission:department.create')->only(['store']);
         $this->middleware('permission:department.update')->only(['update']);
-        $this->middleware('permission:department.delete')->only(['destroy']);
+        // destroy: role (route = superadmin|owner) + in-method tenancy scoping.
+        // Not gated on department.delete so behaviour matches the other
+        // owner-managed resources and never depends on a seeder re-run.
     }
 
     /**
@@ -83,6 +85,15 @@ class DepartmentController extends Controller
     public function update(DepartmentRequest $request, $id)
     {
         $department = Department::findOrFail($id);
+
+        // Tenancy scoping: owners may only edit their own company's departments.
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $department->company_id)) {
+                return ResponseHelper::error(__('messages.department_not_found'), null, 404);
+            }
+        }
 
         $department->update($request->validated());
 

@@ -38,7 +38,7 @@ class FirebaseService
             return null;
         }
 
-        $url = 'https://fcm.googleapis.com/v1/projects/' . 'YOUR_FIREBASE_PROJECT_ID' . '/messages:send';
+        $url = 'https://fcm.googleapis.com/v1/projects/' . config('services.firebase.project_id', 'idplus88') . '/messages:send';
 
         $payload = [
             'message' => [

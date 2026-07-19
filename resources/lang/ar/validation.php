@@ -2,8 +2,9 @@
 
 return [
 
-//    'required' => 'حقل :attribute مطلوب.',
+    'required' => 'حقل :attribute مطلوب.',
     'numeric'  => 'حقل :attribute يجب أن يكون رقمًا.',
+    'email'    => 'حقل :attribute يجب أن يكون بريدًا إلكترونيًا صحيحًا.',
     'exists'   => 'القيمة المحددة في :attribute غير موجودة.',
     'in'       => 'القيمة المختارة في :attribute غير صحيحة.',
     'array'    => 'حقل :attribute يجب أن يكون مصفوفة.',
@@ -11,7 +12,7 @@ return [
     'file'     => 'حقل :attribute يجب أن يكون ملفًا.',
     'string'   => 'حقل :attribute يجب أن يكون نصًا صحيحًا.',
     'boolean'  => 'حقل :attribute يجب أن يكون صحيح أو خطأ.',
-//    'unique'  => 'حقل :attribute يجب أن يكون فريد.',
+    'unique'   => 'حقل :attribute مُستخدَم من قبل.',
 
     'max' => [
         'string' => 'حقل :attribute يجب ألا يتجاوز :max حرفًا.',

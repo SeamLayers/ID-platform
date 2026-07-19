@@ -43,6 +43,8 @@ return [
     'profile_updated' => 'تم تحديث ملف المستخدم بنجاح.',
     'data_retrieved'=>'تم استرجاع بيانات  بنجاح',
     'data_saved' => 'تم حفظ البيانات بنجاح',
+    'data_deleted' => 'تم حذف البيانات بنجاح',
+    'data_updated' => 'تم تحديث البيانات بنجاح',
 
     'user_required' => 'المستخدم مطلوب',
     'user_not_found' => 'المستخدم المختار يجب أن يكون مالكًا',
@@ -58,6 +60,17 @@ return [
     'template_not_found' => 'القالب غير موجود',
     'department_not_found' => 'القسم غير موجود',
     'employee_company_forbidden' => 'يمكنك إدارة موظفي شركتك فقط.',
+    'company_scope_forbidden' => 'يمكنك إدارة السجلات التابعة لشركتك فقط.',
+
+    // إشعارات دورة حياة البطاقة
+    'notif_card_submitted_title' => 'بطاقة بانتظار موافقتك',
+    'notif_card_submitted_body'  => 'تم إنشاء بطاقة تعريف رقمية لك. افتح التطبيق لمراجعتها والموافقة عليها.',
+    'notif_card_approved_title'  => 'تمت الموافقة على البطاقة',
+    'notif_card_approved_body'   => 'وافق :name على بطاقته التعريفية.',
+    'notif_card_rejected_title'  => 'تم رفض البطاقة',
+    'notif_card_rejected_body'   => 'رفض :name بطاقته التعريفية: :reason',
+    'notif_card_published_title' => 'بطاقتك أصبحت متاحة',
+    'notif_card_published_body'  => 'تم نشر بطاقتك التعريفية الرقمية ويمكن الآن مشاركتها.',
     'employee_user_invalid' => 'لا يمكن ربط هذا المستخدم بموظف.',
 
     'employee_required' => 'الموظف مطلوب',

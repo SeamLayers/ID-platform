@@ -17,4 +17,5 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-"storage/firebase/firebase_credentials.json" 
+# Firebase service-account key (secret — never commit)
+/storage/firebase/

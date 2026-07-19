@@ -15,7 +15,8 @@ class EmployeeProjectController extends Controller
     {
         $this->middleware('permission:employee_project.view')->only(['index', 'show']);
         $this->middleware('permission:employee_project.create')->only(['store']);
-        $this->middleware('permission:employee_project.delete')->only(['destroy']);
+        // destroy: role (route = superadmin|owner) + in-method tenancy scoping.
+        // Not gated on employee_project.delete so owners don't need a re-seed.
     }
 
     /**
@@ -98,6 +99,22 @@ class EmployeeProjectController extends Controller
     public function destroy($id)
     {
         $assignment = EmployeeProject::findOrFail($id);
+
+        // Tenancy scoping: owners may only remove assignments that belong to
+        // their own company (resolved via the linked project, then employee).
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $companyId = $assignment->project?->company_id
+                ?? $assignment->employee?->company_id;
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $companyId || ! $ownCompanyIds->contains((int) $companyId)) {
+                return ResponseHelper::error(
+                    __('messages.company_scope_forbidden'),
+                    null,
+                    403
+                );
+            }
+        }
 
         $assignment->delete();
 

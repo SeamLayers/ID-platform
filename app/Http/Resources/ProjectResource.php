@@ -15,6 +15,14 @@ class ProjectResource extends JsonResource
             'start_date'  => $this->start_date,
             'end_date'    => $this->end_date,
 
+            // Nested company so the dashboard can show the company name instead
+            // of a raw #id. Light inline shape (avoids eager-loading the full
+            // CompanyResource graph); only present when the relation is loaded.
+            'company' => $this->whenLoaded('company', fn () => [
+                'id'   => $this->company->id,
+                'name' => $this->company->name,
+            ]),
+
             'employees' => EmployeeResource::collection(
                 $this->whenLoaded('employees')
             ),

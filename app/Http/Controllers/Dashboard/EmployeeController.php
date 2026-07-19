@@ -24,7 +24,14 @@ class EmployeeController extends Controller
         $this->middleware('permission:employee.view')->only(['index', 'show']);
         $this->middleware('permission:employee.create')->only(['store']);
         $this->middleware('permission:employee.update')->only(['update']);
-        $this->middleware('permission:employee.delete')->only(['destroy']);
+        // NOTE: destroy is intentionally NOT gated on the fine-grained
+        // `employee.delete` permission. The route group already restricts it to
+        // role:superadmin|owner, and destroy() enforces tenancy (an owner may
+        // only delete their own company's employees). Requiring the extra
+        // permission meant owners couldn't delete until the roles seeder was
+        // re-run on the server — a fragile deploy dependency. Role + tenancy is
+        // sufficient and works immediately. (The seeder still grants owners
+        // employee.delete for any future permission-based checks.)
     }
 
     /**
@@ -265,6 +272,15 @@ Google Play / Apple Store",
     {
         $employee = Employee::findOrFail($id);
 
+        // Tenancy scoping: owners may only edit their own company's employees.
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $employee->company_id)) {
+                return ResponseHelper::error(__('messages.employee_company_forbidden'), null, 403);
+            }
+        }
+
         $employee->update($request->validated());
 
         // Replace logo if uploaded
@@ -293,6 +309,21 @@ Google Play / Apple Store",
     public function destroy($id)
     {
         $employee = Employee::findOrFail($id);
+
+        // Tenancy scoping: owners may only delete employees inside their own
+        // company (superadmin is unrestricted). Without this, an owner granted
+        // employee.delete could delete another tenant's employee by guessing id.
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $employee->company_id)) {
+                return ResponseHelper::error(
+                    __('messages.employee_company_forbidden'),
+                    null,
+                    403
+                );
+            }
+        }
 
         $employee->delete();
 

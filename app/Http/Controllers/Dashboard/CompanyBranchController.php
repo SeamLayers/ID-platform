@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
+use App\Models\Company;
 use App\Models\CompanyBranch;
 use App\Http\Requests\CompanyBranchRequest;
 use App\Http\Resources\CompanyBranchResource;
@@ -14,7 +15,8 @@ class CompanyBranchController extends Controller
         $this->middleware('permission:company_branch.view')->only(['index', 'show']);
         $this->middleware('permission:company_branch.create')->only(['store']);
         $this->middleware('permission:company_branch.update')->only(['update']);
-        $this->middleware('permission:company_branch.delete')->only(['destroy']);
+        // destroy: role (route = superadmin|owner) + in-method tenancy scoping.
+        // Not gated on company_branch.delete so owners don't need a re-seed.
     }
 
     /**
@@ -71,6 +73,15 @@ class CompanyBranchController extends Controller
     {
         $branch = CompanyBranch::findOrFail($id);
 
+        // Tenancy scoping: owners may only edit their own company's branches.
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = \App\Models\Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $branch->company_id)) {
+                return ResponseHelper::error(__('messages.company_scope_forbidden'), null, 403);
+            }
+        }
+
         $branch->update($request->validated());
 
         return ResponseHelper::success(
@@ -85,6 +96,20 @@ class CompanyBranchController extends Controller
     public function destroy($id)
     {
         $branch = CompanyBranch::findOrFail($id);
+
+        // Tenancy scoping: owners may only delete branches inside their own
+        // company (superadmin is unrestricted). Mirrors the other controllers.
+        $authUser = auth()->user();
+        if (! $authUser->hasRole('superadmin')) {
+            $ownCompanyIds = Company::where('user_id', $authUser->id)->pluck('id');
+            if (! $ownCompanyIds->contains((int) $branch->company_id)) {
+                return ResponseHelper::error(
+                    __('messages.company_scope_forbidden'),
+                    null,
+                    403
+                );
+            }
+        }
 
         $branch->delete();
 

@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'firebase' => [
+        // FCM HTTP v1 target project. Defaults to the live iD+ project so push
+        // works without extra env; override with FIREBASE_PROJECT_ID if needed.
+        'project_id' => env('FIREBASE_PROJECT_ID', 'idplus88'),
+    ],
+
 ];

@@ -48,6 +48,17 @@ return [
     'template_not_found' => 'Template not found',
     'department_not_found' => 'Department not found',
     'employee_company_forbidden' => 'You can only manage employees of your own company.',
+    'company_scope_forbidden' => 'You can only manage records that belong to your own company.',
+
+    // Notification titles/bodies (business-card lifecycle).
+    'notif_card_submitted_title' => 'Card ready for your approval',
+    'notif_card_submitted_body'  => 'A digital business card has been created for you. Open the app to review and approve it.',
+    'notif_card_approved_title'  => 'Card approved',
+    'notif_card_approved_body'   => ':name approved their business card.',
+    'notif_card_rejected_title'  => 'Card rejected',
+    'notif_card_rejected_body'   => ':name rejected their business card: :reason',
+    'notif_card_published_title' => 'Your card is live',
+    'notif_card_published_body'  => 'Your digital business card has been published and can now be shared.',
     'employee_user_invalid' => 'This user cannot be linked to an employee.',
 
     'employee_required' => 'Employee is required',

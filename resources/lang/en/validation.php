@@ -9,6 +9,7 @@ return [
     */
 
     'numeric'  => 'The :attribute must be a number.',
+    'email'    => 'The :attribute must be a valid email address.',
     'exists'   => 'The selected :attribute is invalid.',
     'in'       => 'The selected :attribute is invalid.',
     'array'    => 'The :attribute must be an array.',

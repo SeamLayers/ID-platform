@@ -55,6 +55,9 @@ Route::prefix('v1')->group( function () {
             // Authenticated password change — used by the forced first-login
             // reset (temp password → own password) and the normal change action.
             Route::post('change-password', [RegisteredUserController::class, 'changePassword'])->name('change-password');
+            // Refresh the stored FCM/web-push device token after login (web push
+            // permission is granted asynchronously, usually after the login POST).
+            Route::post('device-token', [AuthenticatedSessionController::class, 'updateDeviceToken'])->name('device-token');
         });
     });
 
@@ -85,6 +88,10 @@ Route::prefix('v1')->group( function () {
                 */
                 Route::middleware('role:owner')->group(function () {
                     Route::get('owner/company', [CompanyController::class, 'show']);
+                    // Owner self-service edit of their own company (tenancy-safe;
+                    // resolves the company from the authed user, not a route id).
+                    // POST (not PUT) so multipart logo uploads work under PHP.
+                    Route::post('owner/company', [CompanyController::class, 'updateOwn']);
                 });
 
                 /*

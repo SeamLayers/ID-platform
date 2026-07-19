@@ -11,6 +11,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Models\BusinessCard;
 use App\Models\Employee;
 use App\Services\CardCodeService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -249,6 +250,15 @@ VCF;
             'submitted_at' => now(),
         ]);
 
+        // Tell the employee their card is waiting for their approval.
+        $card->load('employee.user');
+        (new NotificationService())->notifyUser(
+            $card->employee?->user,
+            __('messages.notif_card_submitted_title'),
+            __('messages.notif_card_submitted_body'),
+            ['type' => 'card_submitted', 'card_id' => $card->id]
+        );
+
         return ResponseHelper::success(
             new BusinessCardResource($card),
             __('messages.business_card_submitted')
@@ -267,6 +277,15 @@ VCF;
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id(),
         ]);
+
+        // Tell the company owner the employee approved their card.
+        $card->load('employee.company.owner');
+        (new NotificationService())->notifyUser(
+            $card->employee?->company?->owner,
+            __('messages.notif_card_approved_title'),
+            __('messages.notif_card_approved_body', ['name' => $card->employee?->name ?? '']),
+            ['type' => 'card_approved', 'card_id' => $card->id]
+        );
 
         return ResponseHelper::success(
             new BusinessCardResource($card),
@@ -290,6 +309,18 @@ VCF;
             'reviewed_by'       => auth()->id(),
             'rejection_reason'  => $data['rejection_reason'],
         ]);
+
+        // Tell the company owner the employee rejected their card (with reason).
+        $card->load('employee.company.owner');
+        (new NotificationService())->notifyUser(
+            $card->employee?->company?->owner,
+            __('messages.notif_card_rejected_title'),
+            __('messages.notif_card_rejected_body', [
+                'name'   => $card->employee?->name ?? '',
+                'reason' => $data['rejection_reason'],
+            ]),
+            ['type' => 'card_rejected', 'card_id' => $card->id]
+        );
 
         return ResponseHelper::success(
             new BusinessCardResource($card),
@@ -316,6 +347,15 @@ VCF;
             'status'    => 'published',
             'is_active' => true,
         ]);
+
+        // Tell the employee their card is live and shareable.
+        $card->load('employee.user');
+        (new NotificationService())->notifyUser(
+            $card->employee?->user,
+            __('messages.notif_card_published_title'),
+            __('messages.notif_card_published_body'),
+            ['type' => 'card_published', 'card_id' => $card->id]
+        );
 
         return ResponseHelper::success(
             new BusinessCardResource($card),
