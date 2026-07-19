@@ -7,7 +7,11 @@ use App\Http\Helpers\ResponseHelper;
 use App\Models\BusinessCard;
 use App\Models\CardInteraction;
 use App\Models\Company;
+use App\Models\CompanyBranch;
+use App\Models\Department;
 use App\Models\Employee;
+use App\Models\EmployeeProject;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 /**
@@ -18,8 +22,11 @@ use Illuminate\Http\Request;
  * those with real aggregates computed from business_cards + card_interactions,
  * tenancy-scoped so an owner only ever sees their own company's numbers.
  *
- * Entity counts (companies/branches/employees/...) already come from the
- * individual list endpoints, so this focuses on card + interaction analytics.
+ * Entity counts (companies/branches/employees/...) are returned here too, under
+ * `entities`. The dashboard used to derive them by calling six list endpoints
+ * with per_page=1 and counting the rows that came back — which reported "1" for
+ * every populated table, because the paginator's real `total` never survives
+ * the response envelope.
  */
 class OverviewController extends Controller
 {
@@ -44,6 +51,36 @@ class OverviewController extends Controller
             ? null
             : Employee::whereIn('company_id', $companyIds ?? [])->pluck('id');
 
+        // --- Entity counts ---------------------------------------------------
+        // Real totals for the six count tiles. Owners are scoped to the
+        // companies they own; a superadmin gets platform-wide numbers.
+        //
+        // These MUST match what the corresponding list page shows, so they use
+        // the same unconditional whereHas('company') the list endpoints use: it
+        // carries the parent's soft-delete scope, excluding rows orphaned by a
+        // deleted company (delete doesn't cascade). Counting those would make a
+        // superadmin's "Branches" tile disagree with /branches.
+        //
+        // NOTE: projects and employee_projects have NO deleted_at column, so
+        // their notDeleted() scopes would produce invalid SQL — don't use them.
+        $ownedOnly = function ($q) use ($isSuperadmin, $user) {
+            $q->when(! $isSuperadmin, fn ($c) => $c->where('user_id', $user->id));
+        };
+
+        $entities = [
+            'companies'   => $isSuperadmin
+                ? Company::count()
+                : Company::where('user_id', $user->id)->count(),
+            'branches'    => CompanyBranch::whereHas('company', $ownedOnly)->count(),
+            'departments' => Department::whereHas('company', $ownedOnly)->count(),
+            'employees'   => Employee::whereHas('company', $ownedOnly)->count(),
+            'projects'    => Project::whereHas('company', $ownedOnly)->count(),
+            'assignments' => EmployeeProject::whereHas(
+                'employee',
+                fn ($e) => $e->whereHas('company', $ownedOnly)
+            )->count(),
+        ];
+
         // --- Cards -----------------------------------------------------------
         $cards = BusinessCard::query()
             ->when($employeeIds !== null, fn ($q) => $q->whereIn('employee_id', $employeeIds))
@@ -60,7 +97,11 @@ class OverviewController extends Controller
         }
 
         // --- Regions (published cards grouped by branch) ---------------------
+        // Genuinely published only — this previously grouped every card
+        // regardless of status while both the comment and the dashboard label
+        // said "published".
         $regions = $cards
+            ->where('status', 'published')
             ->groupBy(fn ($c) => optional(optional($c->employee)->branch)->name ?: '—')
             ->map(fn ($group, $name) => ['name' => $name, 'value' => $group->count()])
             ->values()
@@ -129,10 +170,22 @@ class OverviewController extends Controller
         })->values();
 
         return ResponseHelper::success([
+            'entities' => $entities,
             'cards' => [
                 'total'     => $cards->count(),
                 'published' => $cardStatus['published'],
-                'active'    => $cards->where('is_active', true)->count(),
+                // "Active" means live to the public: published AND not
+                // deactivated. is_active alone defaults to true at creation, so
+                // the old figure counted every untouched draft as active.
+                'active'    => $cards->where('status', 'published')
+                    ->where('is_active', true)
+                    ->count(),
+                // Awaiting the employee's decision — the number an owner acts on.
+                'pending'   => $cardStatus['submitted'],
+                // Rollout coverage: employees who still have no card at all.
+                'employees_without_card' => Employee::whereHas('company', $ownedOnly)
+                    ->doesntHave('businessCard')
+                    ->count(),
             ],
             'interactions' => [
                 'total' => $interactions->count(),

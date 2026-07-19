@@ -28,8 +28,15 @@ class CompanyBranchController extends Controller
 
         $branches = CompanyBranch::notDeleted()
             ->with('company')
-            ->whereHas('company', function ($query) {
-                $query->where('user_id', auth()->id());
+            // whereHas stays UNCONDITIONAL: besides tenancy it also enforces the
+            // parent's soft-delete scope, so rows orphaned by a deleted company
+            // (delete doesn't cascade) never reach a Resource that dereferences
+            // ->company and 500s. Only the ownership predicate is role-dependent.
+            ->whereHas('company', function ($q) {
+                $q->when(
+                    ! auth()->user()?->hasRole('superadmin'),
+                    fn ($c) => $c->where('user_id', auth()->id())
+                );
             })
             ->latest()
             ->paginate(10);

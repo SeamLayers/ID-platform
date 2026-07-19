@@ -31,8 +31,15 @@ class DepartmentController extends Controller
                 'company',
                 'employees'
             ])
+            // whereHas stays UNCONDITIONAL: besides tenancy it also enforces the
+            // parent's soft-delete scope, so rows orphaned by a deleted company
+            // (delete doesn't cascade) never reach a Resource that dereferences
+            // ->company and 500s. Only the ownership predicate is role-dependent.
             ->whereHas('company', function ($q) {
-                $q->where('user_id', auth()->id());
+                $q->when(
+                    ! auth()->user()?->hasRole('superadmin'),
+                    fn ($c) => $c->where('user_id', auth()->id())
+                );
             })
             ->when($request->company_id, function ($q) use ($request) {
                 $q->where('company_id', $request->company_id);
