@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
@@ -15,24 +16,44 @@ class CardCodeService
 
 
 
-    public function generateQr(string $url, string $employeeNumber): string
+    /**
+     * Render the card's QR to the public disk and return its path.
+     *
+     * PNG needs the imagick extension. Plenty of shared hosts don't have it,
+     * and this used to take the whole request down with
+     * "You need to install the imagick extension to use this back end" — which
+     * meant issuing a card 500'd, and (once cards are auto-created with the
+     * employee) an employee could be created with no card at all.
+     *
+     * So: PNG when we can, SVG when we can't — the pure-PHP backend always
+     * works — and null rather than an exception if even that fails. `qr_code`
+     * is nullable and clients branch on the file extension.
+     */
+    public function generateQr(string $url, string $employeeNumber): ?string
     {
-        $png = QrCode::format('png')
-            ->size(300)
-            ->errorCorrection('H')
-            ->generate($url);
+        foreach (['png', 'svg'] as $format) {
+            try {
+                $image = QrCode::format($format)
+                    ->size(300)
+                    ->errorCorrection('H')
+                    ->generate($url);
 
-        $fileName = sprintf(
-            'QR_%s_%s.png',
-            $employeeNumber,
-            Carbon::now()->format('Ymd_His')
-        );
+                $path = sprintf(
+                    'qr-codes/QR_%s_%s.%s',
+                    $employeeNumber,
+                    Carbon::now()->format('Ymd_His'),
+                    $format
+                );
 
-        $path = "qr-codes/{$fileName}";
+                Storage::disk('public')->put($path, $image);
 
-        Storage::disk('public')->put($path, $png);
+                return $path;
+            } catch (\Throwable $e) {
+                Log::warning("QR generation as {$format} failed: " . $e->getMessage());
+            }
+        }
 
-        return $path;
+        return null;
     }
     /**
      * Generate NFC code (logical identifier)

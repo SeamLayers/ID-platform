@@ -8,6 +8,7 @@ use App\Http\Requests\EmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\CardProvisioningService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -203,6 +204,12 @@ Google Play / Apple Store",
 
             return $employee;
         });
+
+        // Every employee gets a card the moment they exist, as a draft they can
+        // personalise in the app. Deliberately AFTER the commit and internally
+        // fail-safe: QR generation needs the imagick extension, and a host
+        // without it must not take employee creation down with it.
+        (new CardProvisioningService())->provisionFor($employee);
 
         if ($credentialsMail !== null) {
             try {

@@ -36,6 +36,11 @@ class NotificationService
                 'user_id' => $user->id,
                 'title'   => $title,
                 'message' => $message,
+                // Persisted now (they used to reach push only and be dropped
+                // here), so GET /notifications can tell the client what the
+                // notification refers to.
+                'type'    => $data['type'] ?? null,
+                'data'    => $data ?: null,
                 'is_read' => false,
             ]);
         } catch (\Throwable $e) {

@@ -22,11 +22,16 @@ class Notification extends Model
         'user_id',
         'title',
         'message',
+        // What the notification is ABOUT (card_submitted, card_approved, …) and
+        // its payload (card_id, …), so the app can deep-link from the list.
+        'type',
+        'data',
         'is_read',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
+        'data' => 'array',
     ];
 
     public function user(): BelongsTo

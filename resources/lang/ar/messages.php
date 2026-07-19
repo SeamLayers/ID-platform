@@ -87,6 +87,24 @@ return [
     'employee_business_card_exists' => 'الموظف لديه بطاقة عمل بالفعل',
 
     'business_card_unavailable' => 'هذه البطاقة لم تعد متاحة.',
+
+    // --- تخصيص بطاقة الموظف ومراجعة المالك ---------------------------------
+    'no_card_yet' => 'لا توجد لديك بطاقة تعريف بعد. ستقوم شركتك بإنشائها لك.',
+    'card_locked_for_editing' => 'هذه البطاقة قيد المراجعة أو منشورة بالفعل، ولا يمكن تعديلها الآن.',
+    'card_already_submitted' => 'تم إرسال هذه البطاقة للمراجعة بالفعل.',
+    'card_not_awaiting_review' => 'هذه البطاقة ليست قيد انتظار المراجعة.',
+    'color_must_be_hex' => 'يجب أن تكون الألوان بصيغة ست عشرية مثل ‎#22D3EE.',
+    'business_card_changes_requested' => 'تم طلب التعديلات بنجاح',
+
+    'notif_card_review_title' => 'بطاقة بانتظار مراجعتك',
+    'notif_card_review_body'  => 'قام :name بتخصيص بطاقته التعريفية وأرسلها لمراجعتك.',
+    'notif_card_changes_title' => 'طلب تعديل على بطاقتك',
+    'notif_card_changes_body'  => 'طلبت شركتك إجراء تعديل: :comment',
+    'notif_card_owner_approved_title' => 'تمت الموافقة على بطاقتك',
+    'notif_card_owner_approved_body'  => 'وافقت شركتك على بطاقتك التعريفية، وسيتم نشرها قريباً.',
+
+    'cannot_approve_own_card' => 'لا يمكنك الموافقة على بطاقتك بنفسك. تقوم شركتك بمراجعتها.',
+
     'password_expired' => 'انتهت صلاحية كلمة المرور الخاصة بك. يرجى إعادة تعيين كلمة المرور للمتابعة.',
 ];
 

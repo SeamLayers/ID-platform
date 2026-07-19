@@ -167,16 +167,20 @@ class RolesAndPermissionsSeeder extends Seeder
             'employee_project.create',
             'employee_project.delete',
 
-            // Owners can issue, edit, submit, publish and retire cards for
-            // their company's employees. Approval/rejection are explicitly
-            // delegated to the mobile reviewer role (employee with the
-            // approve/reject permissions) so the owner doesn't self-approve.
+            // Owners issue, edit, submit, publish and retire cards for their
+            // company's employees, and review what each employee personalised
+            // in the mobile app — approving it or sending it back with a note.
             'business_card.view',
             'business_card.create',
             'business_card.update',
             'business_card.submit',
             'business_card.publish',
             'business_card.deactivate',
+            // The owner reviews what the employee personalised in the app, so
+            // approval now belongs to them (the employee no longer approves
+            // their own card).
+            'business_card.approve',
+            'business_card.reject',
 
             'business_card_template.view',
             'business_card_template.create',

@@ -25,6 +25,7 @@ use \App\Http\Controllers\Dashboard\{
     OverviewController
 };
 use App\Http\Controllers\Public\PublicCardController;
+use App\Http\Controllers\Mobile\MyCardController;
 
 
 Route::prefix('v1')->group( function () {
@@ -120,6 +121,10 @@ Route::prefix('v1')->group( function () {
                     Route::post('roles/{role}/users', [RolesController::class, 'assignUsers']);
                     Route::post('register', [RegisteredUserController::class, 'store'])->name('register');
                     Route::post('business-cards/{id}/submit', [BusinessCardController::class, 'submit']);
+                    // Owner's review verdict on an employee's submission: accept
+                    // it (approve → publish) or send it back with a note.
+                    Route::post('business-cards/{id}/approve', [BusinessCardController::class, 'approve']);
+                    Route::post('business-cards/{id}/request-changes', [BusinessCardController::class, 'requestChanges']);
                     Route::post('business-cards/{id}/publish', [BusinessCardController::class, 'publish']);
                     Route::post('business-cards/{id}/deactivate', [BusinessCardController::class, 'deactivate']);
                     Route::post('business-cards/{id}/track', [BusinessCardController::class, 'track']);
@@ -145,6 +150,19 @@ Route::prefix('v1')->group( function () {
                 // Workflow
                 Route::post('business-cards/{id}/approve', [BusinessCardController::class, 'approve']);
                 Route::post('business-cards/{id}/reject', [BusinessCardController::class, 'reject']);
+
+                /*
+                 * The employee's OWN card — no id in the path, so it is always
+                 * resolved from the authenticated user's employee record.
+                 *
+                 *   GET  my-card         → the card + its template design
+                 *   POST my-card         → personalise (photo, colours, bio,
+                 *                          second phone) — multipart
+                 *   POST my-card/submit  → hand it to the owner for review
+                 */
+                Route::get('my-card', [MyCardController::class, 'show']);
+                Route::post('my-card', [MyCardController::class, 'update']);
+                Route::post('my-card/submit', [MyCardController::class, 'submit']);
             });
 
     });
@@ -170,6 +188,9 @@ Route::prefix('v1')->group( function () {
 
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
+    // Cheap badge count, and a one-shot "clear the badge" for the app.
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 });
 

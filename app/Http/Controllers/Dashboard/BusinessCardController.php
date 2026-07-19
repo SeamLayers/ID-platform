@@ -24,9 +24,14 @@ class BusinessCardController extends Controller
         $this->middleware('permission:business_card.update')->only(['update']);
         $this->middleware('permission:business_card.submit')->only(['submit']);
 
-        // for employee
-        $this->middleware('permission:business_card.approve')->only(['approve']);
-        $this->middleware('permission:business_card.reject')->only(['reject']);
+        // approve / reject / request-changes are NOT gated on the fine-grained
+        // permissions. Under the current flow the COMPANY OWNER is the
+        // reviewer, and the seeder deliberately withholds business_card.approve
+        // from owners — gating here would 403 them until someone re-ran the
+        // seeder on the server, exactly the fragile deploy dependency we hit
+        // with deletes. The route groups already restrict these to
+        // superadmin|owner (dashboard) or superadmin|employee (mobile), and
+        // scopeToViewer() enforces tenancy inside each method.
         //////
 
         $this->middleware('permission:business_card.publish')->only(['publish']);
@@ -238,7 +243,9 @@ VCF;
      */
     public function update(BusinessCardRequest $request, $id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped: a bare findOrFail let an owner act on another company's
+        // card by guessing its id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $data = $request->validated();
 
@@ -250,7 +257,26 @@ VCF;
             unset($data['expiry_days']);
         }
 
+        // The owner can set the same presentation fields the employee edits in
+        // the app — so they can prepare a card up front, and the employee sees
+        // the owner's version on their next refresh (it rides along on
+        // GET /auth/profile).
+        if (array_key_exists('theme', $data)) {
+            $data['theme_json'] = $data['theme'] ?: null;
+            unset($data['theme']);
+        }
+
+        // employee_ids belongs to create only; it is not a column.
+        unset($data['employee_ids']);
+
         $card->update($data);
+
+        if ($request->boolean('remove_photo')) {
+            $card->clearMediaCollection(BusinessCard::PHOTO_COLLECTION);
+        } elseif ($request->hasFile('photo')) {
+            $card->addMediaFromRequest('photo')
+                ->toMediaCollection(BusinessCard::PHOTO_COLLECTION);
+        }
 
         return ResponseHelper::success(
             new BusinessCardResource(
@@ -270,7 +296,9 @@ VCF;
 
     public function destroy($id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped: a bare findOrFail let an owner act on another company's
+        // card by guessing its id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $card->delete();
 
@@ -281,7 +309,9 @@ VCF;
     }
     public function submit($id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped: a bare findOrFail let an owner act on another company's
+        // card by guessing its id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $card->update([
             'status'       => 'submitted',
@@ -304,14 +334,80 @@ VCF;
     }
 
     /**
+     * Send an employee's submitted card back for changes.
+     *
+     * The owner's half of the review: instead of a flat rejection, they say
+     * what to fix and the employee gets the note in the app, edits, resubmits.
+     */
+    public function requestChanges(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'comment' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
+
+        if ($card->status !== BusinessCard::STATUS_SUBMITTED) {
+            return ResponseHelper::error(
+                __('messages.card_not_awaiting_review'),
+                null,
+                422
+            );
+        }
+
+        $card->update([
+            'status'         => BusinessCard::STATUS_CHANGES_REQUESTED,
+            'review_comment' => $validated['comment'],
+            'reviewed_at'    => now(),
+            'reviewed_by'    => auth()->user()?->employee?->id,
+        ]);
+
+        $card->load('employee.user');
+
+        (new NotificationService())->notifyUser(
+            $card->employee?->user,
+            __('messages.notif_card_changes_title'),
+            __('messages.notif_card_changes_body', ['comment' => $validated['comment']]),
+            ['type' => 'card_changes_requested', 'card_id' => $card->id]
+        );
+
+        return ResponseHelper::success(
+            new BusinessCardResource($card->fresh(['employee', 'template', 'reviewer'])),
+            __('messages.business_card_changes_requested')
+        );
+    }
+
+    /**
      * Approve card
      */
     public function approve($id)
     {
-        // Scoped, not a bare findOrFail: approval is the employee's own
-        // decision about their own card. Without this any employee could
+        // Scoped, not a bare findOrFail: without this any employee could
         // approve any other employee's card by guessing an id.
         $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
+
+        // No self-approval. The employee personalises their card and the OWNER
+        // signs it off; letting the employee approve their own submission would
+        // put them one Publish away from bypassing review entirely. (The legacy
+        // mobile reviews screen still points here, hence the guard rather than
+        // relying on the client not to offer the button.)
+        $actor = auth()->user();
+        if (! $actor?->hasAnyRole(['owner', 'superadmin'])
+            && $actor?->employee?->id === $card->employee_id
+        ) {
+            return ResponseHelper::error(__('messages.cannot_approve_own_card'), null, 403);
+        }
+
+        // Only a card actually awaiting a decision can be approved. Without
+        // this, approving an already-published card silently demoted it back to
+        // `approved` — and since every public surface gates on `published`, a
+        // live card would go dark with no warning.
+        if (! in_array($card->status, [
+            BusinessCard::STATUS_SUBMITTED,
+            BusinessCard::STATUS_CHANGES_REQUESTED,
+        ], true)) {
+            return ResponseHelper::error(__('messages.card_not_awaiting_review'), null, 422);
+        }
 
         $card->update([
             'status'      => 'approved',
@@ -323,14 +419,30 @@ VCF;
             'reviewed_by' => auth()->user()?->employee?->id,
         ]);
 
-        // Tell the company owner the employee approved their card.
-        $card->load('employee.company.owner');
-        (new NotificationService())->notifyUser(
-            $card->employee?->company?->owner,
-            __('messages.notif_card_approved_title'),
-            __('messages.notif_card_approved_body', ['name' => $card->employee?->name ?? '']),
-            ['type' => 'card_approved', 'card_id' => $card->id]
-        );
+        // Notify the OTHER party, whoever that is. In the current flow the
+        // owner approves what the employee personalised, so the employee hears
+        // about it; the legacy path (employee approves the owner's card) still
+        // notifies the owner.
+        $card->load(['employee.company.owner', 'employee.user']);
+        $actorIsOwner = auth()->user()?->hasAnyRole(['owner', 'superadmin']) ?? false;
+
+        $notifications = new NotificationService();
+
+        if ($actorIsOwner) {
+            $notifications->notifyUser(
+                $card->employee?->user,
+                __('messages.notif_card_owner_approved_title'),
+                __('messages.notif_card_owner_approved_body'),
+                ['type' => 'card_approved', 'card_id' => $card->id]
+            );
+        } else {
+            $notifications->notifyUser(
+                $card->employee?->company?->owner,
+                __('messages.notif_card_approved_title'),
+                __('messages.notif_card_approved_body', ['name' => $card->employee?->name ?? '']),
+                ['type' => 'card_approved', 'card_id' => $card->id]
+            );
+        }
 
         return ResponseHelper::success(
             new BusinessCardResource($card),
@@ -348,6 +460,16 @@ VCF;
 
         // Same ownership scope as approve().
         $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
+
+        // And the same self-review guard: without it an employee could reject
+        // their OWN submitted card, which flips it back to an editable state
+        // and lets them keep editing while the owner is still reviewing.
+        $actor = auth()->user();
+        if (! $actor?->hasAnyRole(['owner', 'superadmin'])
+            && $actor?->employee?->id === $card->employee_id
+        ) {
+            return ResponseHelper::error(__('messages.cannot_approve_own_card'), null, 403);
+        }
 
         $card->update([
             'status'            => 'rejected',
@@ -380,7 +502,9 @@ VCF;
      */
     public function publish($id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped: a bare findOrFail let an owner act on another company's
+        // card by guessing its id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         if ($card->status !== 'approved') {
 
@@ -415,7 +539,9 @@ VCF;
      */
     public function deactivate($id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped: a bare findOrFail let an owner act on another company's
+        // card by guessing its id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $card->update([
             'is_active' => false,
@@ -429,7 +555,9 @@ VCF;
 
     public function track(Request $request, $id)
     {
-        $card = BusinessCard::findOrFail($id);
+        // Scoped: a bare findOrFail let an owner act on another company's
+        // card by guessing its id.
+        $card = $this->scopeToViewer(BusinessCard::query())->findOrFail($id);
 
         $validated = $request->validate([
 

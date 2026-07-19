@@ -75,5 +75,23 @@ return [
     'employee_business_card_exists' => 'Employee already has a business card',
 
     'business_card_unavailable' => 'This business card is no longer available.',
+
+    // --- Employee card personalisation + owner review -----------------------
+    'no_card_yet' => 'You do not have a business card yet. Your company will create one for you.',
+    'card_locked_for_editing' => 'This card is waiting for review or already published, so it cannot be edited right now.',
+    'card_already_submitted' => 'This card has already been sent for review.',
+    'card_not_awaiting_review' => 'This card is not waiting for review.',
+    'color_must_be_hex' => 'Colours must be a hex value like #22D3EE.',
+    'business_card_changes_requested' => 'Changes requested successfully',
+
+    'notif_card_review_title' => 'A card needs your review',
+    'notif_card_review_body'  => ':name personalised their business card and sent it for your review.',
+    'notif_card_changes_title' => 'Changes requested on your card',
+    'notif_card_changes_body'  => 'Your company asked for a change: :comment',
+    'notif_card_owner_approved_title' => 'Your card was approved',
+    'notif_card_owner_approved_body'  => 'Your company approved your business card. It will be published shortly.',
+
+    'cannot_approve_own_card' => 'You cannot approve your own card. Your company reviews it for you.',
+
     'password_expired' => 'Your password has expired. Please reset your password to continue.',
 ];
