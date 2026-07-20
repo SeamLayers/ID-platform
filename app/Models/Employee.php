@@ -24,6 +24,29 @@ class Employee extends Model implements HasMedia
         return $query->whereNull('deleted_at');
     }
 
+    public function scopeSearch($query, $value)
+    {
+        $term = trim((string) $value);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = '%' . $term . '%';
+
+        // The OR-chain MUST stay wrapped in its own closure: the controller
+        // applies tenancy as a sibling predicate, and an ungrouped orWhere
+        // would break out of that AND and leak other companies' employees.
+        return $query->where(function ($q) use ($like) {
+            $q->where('name', 'like', $like)
+                ->orWhere('email', 'like', $like)
+                ->orWhere('employee_number', 'like', $like)
+                ->orWhere('position', 'like', $like)
+                ->orWhereHas('department', fn ($d) => $d->where('name', 'like', $like))
+                ->orWhereHas('branch', fn ($b) => $b->where('name', 'like', $like));
+        });
+    }
+
     /**
      * Next auto-generated employee number for a company: EMP-{companyId}-{NNNN}.
      *

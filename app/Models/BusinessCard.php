@@ -85,6 +85,17 @@ class BusinessCard extends Model implements HasMedia
      */
     protected ?string $snapshotPhotoUrl = null;
 
+    /**
+     * Whether applyPublishedSnapshot() has run on this instance.
+     *
+     * Separate from $snapshotPhotoUrl because null is a MEANINGFUL snapshot
+     * value: a card published with no photo freezes 'photo' => null. Keying
+     * off the URL alone made photoUrl() fall through to the live media
+     * collection in exactly that case, publishing the employee's unreviewed
+     * photo the moment they reopened the card.
+     */
+    protected bool $snapshotApplied = false;
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection(self::PHOTO_COLLECTION)->singleFile();
@@ -93,7 +104,10 @@ class BusinessCard extends Model implements HasMedia
     /** Absolute URL of the employee's photo, or null when none is set. */
     public function photoUrl(): ?string
     {
-        if ($this->snapshotPhotoUrl !== null) {
+        // Once a snapshot is applied it is the whole truth, including when it
+        // says there was no photo. Falling through to the live collection here
+        // would publish whatever the employee has uploaded since reopening.
+        if ($this->snapshotApplied) {
             return $this->snapshotPhotoUrl;
         }
 
@@ -148,6 +162,7 @@ class BusinessCard extends Model implements HasMedia
         $this->secondary_phone = $snapshot['secondary_phone'] ?? null;
         $this->theme_json      = is_array($snapshot['theme'] ?? null) ? $snapshot['theme'] : $this->theme_json;
         $this->snapshotPhotoUrl = $snapshot['photo'] ?? null;
+        $this->snapshotApplied  = true;
 
         return $this;
     }

@@ -59,6 +59,7 @@ return [
     'employee_not_found' => 'الموظف غير موجود',
     'template_not_found' => 'القالب غير موجود',
     'department_not_found' => 'القسم غير موجود',
+    'data_not_found' => 'غير موجود',
     'employee_company_forbidden' => 'يمكنك إدارة موظفي شركتك فقط.',
     'company_scope_forbidden' => 'يمكنك إدارة السجلات التابعة لشركتك فقط.',
 

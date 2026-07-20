@@ -156,8 +156,17 @@ class MyCardController extends Controller
         $card->update([
             'status'         => BusinessCard::STATUS_SUBMITTED,
             'submitted_at'   => now(),
-            // Clear the previous round's feedback so the owner reviews fresh.
+            // Clear the previous round's verdict so the owner reviews fresh.
+            // reviewed_at MUST be reset too: can_reopen is "submitted and not
+            // yet ruled on", so a stale timestamp from an earlier round left
+            // the employee with can_edit false AND can_reopen false — the one
+            // state where the editor has no controls at all. That is the
+            // original "nothing is clickable" bug, and without this it came
+            // back on every second submission.
             'review_comment' => null,
+            'reviewed_at'    => null,
+            'reviewed_by'    => null,
+            'rejection_reason' => null,
         ]);
 
         $card->load('employee.company.owner');

@@ -144,13 +144,27 @@ Route::prefix('v1')->group( function () {
         | Mobile (Employee)
         |----------------------------------------
         */
+        /*
+         * OWNER belongs in this group.
+         *
+         * Three notifications are delivered to the company owner — "a card
+         * needs your review" and the two employee-side verdicts — and the app
+         * opens the review queue for all of them. Gated to superadmin|employee,
+         * an owner who tapped one got a 403 on the only route that screen
+         * calls, and the card screen dead-ended the same way.
+         *
+         * Nothing is widened by this: the review routes scope through
+         * scopeToViewer() (owner → their own companies only), and every
+         * my-card / received-contacts route resolves from the caller's OWN
+         * employee record — an owner has none, so those answer 404 "no card
+         * yet", which is a state the app already renders properly.
+         */
         Route::prefix('mobile')
-            ->middleware(['auth', 'role:superadmin|employee'])
+            ->middleware(['auth', 'role:superadmin|employee|owner'])
             ->group(function () {
-                // Read — reviewer queue. The dashboard list at
-                // /dashboard/business-cards is gated to superadmin|owner,
-                // so mobile employees with `business_card.view` need a
-                // mobile-scoped read route.
+                // Read — the reviewer queue. The dashboard list at
+                // /dashboard/business-cards is gated to superadmin|owner, so
+                // mobile reviewers need a mobile-scoped read route.
                 Route::get('business-cards', [BusinessCardController::class, 'index']);
                 Route::get('business-cards/{id}', [BusinessCardController::class, 'show']);
 

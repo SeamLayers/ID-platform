@@ -26,6 +26,11 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
+        // The employee form asks for per_page=200 to fill its department
+        // picker; hard-coding 10 here silently truncated those options.
+        $perPage = (int) $request->input('per_page', 10);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 10;
+
         $departments = Department::notDeleted()
             ->with([
                 'company',
@@ -44,11 +49,12 @@ class DepartmentController extends Controller
             ->when($request->company_id, function ($q) use ($request) {
                 $q->where('company_id', $request->company_id);
             })
-            ->when($request->search, function ($q) use ($request) {
-                $q->search($request->search);
+            // filled(), not truthiness: a literal "0" is a valid term.
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->search($request->input('search'));
             })
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage);
 
         return ResponseHelper::success(
             DepartmentResource::collection($departments),
@@ -60,7 +66,17 @@ class DepartmentController extends Controller
      */
     public function store(DepartmentRequest $request)
     {
-        $department = Department::create($request->validated());
+        $data = $request->validated();
+
+        // company_id arrives from the client and was only checked for
+        // existence, so an owner could post another company's id and plant a
+        // department inside a tenant they have nothing to do with. index(),
+        // update() and destroy() all scope; store() did not.
+        if ($denied = $this->denyOutsideOwnCompanies($data['company_id'] ?? null)) {
+            return $denied;
+        }
+
+        $department = Department::create($data);
 
         return ResponseHelper::success(
             $department->load(['company', 'employees']),
@@ -80,10 +96,40 @@ class DepartmentController extends Controller
         ])
             ->findOrFail($id);
 
+        // A bare findOrFail served any owner any tenant's department by id —
+        // and the eager-loaded `company` came with it, so the response carried
+        // another business's commercial register, phone and email.
+        if ($denied = $this->denyOutsideOwnCompanies($department->company_id)) {
+            return $denied;
+        }
+
         return ResponseHelper::success(
             $department,
             __('messages.data_retrieved')
         );
+    }
+
+    /**
+     * 404 unless the caller owns the company, or is a superadmin.
+     *
+     * 404 rather than 403 on purpose: telling an outsider "this exists but is
+     * not yours" is itself a disclosure — it confirms the id is real.
+     */
+    private function denyOutsideOwnCompanies($companyId)
+    {
+        $user = auth()->user();
+
+        if ($user?->hasRole('superadmin')) {
+            return null;
+        }
+
+        $owned = \App\Models\Company::where('user_id', $user?->id)->pluck('id');
+
+        if ($companyId === null || ! $owned->contains((int) $companyId)) {
+            return ResponseHelper::error(__('messages.department_not_found'), null, 404);
+        }
+
+        return null;
     }
 
     /**

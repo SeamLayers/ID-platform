@@ -69,6 +69,10 @@ class EmployeeController extends Controller
             ->when($request->branch_id, function ($q) use ($request) {
                 $q->where('branch_id', $request->branch_id);
             })
+            // filled(), not truthiness: a literal "0" is a valid term.
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->search($request->input('search'));
+            })
             ->latest()
             ->paginate($perPage);
 

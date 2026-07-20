@@ -45,8 +45,10 @@ class ProjectController extends Controller
             ->when($request->company_id, function ($q) use ($request) {
                 $q->where('company_id', $request->company_id);
             })
-            ->when($request->search, function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%");
+            // filled(), not truthiness: a literal "0" is a valid term. The
+            // OR-chain lives in a scope so it stays grouped against tenancy.
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->search($request->input('search'));
             })
             ->latest()
             ->paginate($perPage);

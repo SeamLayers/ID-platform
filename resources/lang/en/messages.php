@@ -47,6 +47,7 @@ return [
     'employee_not_found' => 'Employee not found',
     'template_not_found' => 'Template not found',
     'department_not_found' => 'Department not found',
+    'data_not_found' => 'Not found',
     'employee_company_forbidden' => 'You can only manage employees of your own company.',
     'company_scope_forbidden' => 'You can only manage records that belong to your own company.',
 

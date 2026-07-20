@@ -96,12 +96,14 @@ class OverviewController extends Controller
             $cardStatus[$s] = ($cardStatus[$s] ?? 0) + 1;
         }
 
-        // --- Regions (published cards grouped by branch) ---------------------
-        // Genuinely published only — this previously grouped every card
-        // regardless of status while both the comment and the dashboard label
-        // said "published".
+        // --- Regions (live cards grouped by branch) ---------------------------
+        // Live, not merely status='published'. Since employees can reopen a
+        // published card to work on a new version, "published" is now narrower
+        // than "reachable by the public": a reopened card sits in draft while
+        // its snapshot keeps serving. Counting on status made the chart drop a
+        // person every time one of them started an edit.
         $regions = $cards
-            ->where('status', 'published')
+            ->filter(fn ($c) => $c->isPubliclyVisible())
             ->groupBy(fn ($c) => optional(optional($c->employee)->branch)->name ?: '—')
             ->map(fn ($group, $name) => ['name' => $name, 'value' => $group->count()])
             ->values()
@@ -174,12 +176,12 @@ class OverviewController extends Controller
             'cards' => [
                 'total'     => $cards->count(),
                 'published' => $cardStatus['published'],
-                // "Active" means live to the public: published AND not
-                // deactivated. is_active alone defaults to true at creation, so
-                // the old figure counted every untouched draft as active.
-                'active'    => $cards->where('status', 'published')
-                    ->where('is_active', true)
-                    ->count(),
+                // "Active" means live to the public — which is exactly what
+                // isPubliclyVisible() decides, including the case of a card
+                // that has been reopened for editing but is still serving its
+                // published snapshot. is_active alone defaults to true at
+                // creation, so the original figure counted untouched drafts.
+                'active'    => $cards->filter(fn ($c) => $c->isPubliclyVisible())->count(),
                 // Awaiting the employee's decision — the number an owner acts on.
                 'pending'   => $cardStatus['submitted'],
                 // Rollout coverage: employees who still have no card at all.

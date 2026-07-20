@@ -12,6 +12,23 @@ class Project extends Model
     {
         return $query->whereNull('deleted_at');
     }
+    public function scopeSearch($query, $value)
+    {
+        $term = trim((string) $value);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = '%' . $term . '%';
+
+        // Grouped so the controller's tenancy predicate stays ANDed on.
+        return $query->where(function ($q) use ($like) {
+            $q->where('name', 'like', $like)
+                ->orWhereHas('company', fn ($c) => $c->where('name', 'like', $like));
+        });
+    }
+
     public function employees() {
         return $this->belongsToMany(Employee::class, 'employee_projects');
     }

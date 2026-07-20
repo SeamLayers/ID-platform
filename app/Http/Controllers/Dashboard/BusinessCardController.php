@@ -189,6 +189,10 @@ VCF;
                     'phone' => $employee->phone,
                     'iqama_number' => $employee->iqama_number,
                     'status' => $employee->status,
+                    // Was missing here while CardProvisioningService included
+                    // it, so a card issued from the dashboard showed a blank
+                    // Job Title on the employee's phone and on the public page.
+                    'position' => $employee->position,
 
                     'company' => optional($employee->company)->name,
                     'branch' => optional($employee->branch)->name,
@@ -655,7 +659,11 @@ VCF;
      */
     public function analytics($id)
     {
-        $card = BusinessCard::with('interactions')
+        // Scoped like every other action here. This was the one that still used
+        // a bare findOrFail, and the route only checks the `owner` role — so
+        // any owner could walk sequential ids and read another company's
+        // interaction totals and its ten most recent scans.
+        $card = $this->scopeToViewer(BusinessCard::with('interactions'))
             ->findOrFail($id);
 
         $analytics = [

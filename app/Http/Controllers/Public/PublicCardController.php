@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Http\Helpers\ResponseHelper;
-use App\Http\Resources\BusinessCardResource;
+use App\Http\Resources\PublicCardResource;
 use App\Models\BusinessCard;
 use App\Models\CardContactShare;
 use App\Services\NotificationService;
@@ -48,8 +48,11 @@ class PublicCardController extends Controller
             $card->applyPublishedSnapshot();
         }
 
+        // PublicCardResource, NOT BusinessCardResource: this route is
+        // unauthenticated and the internal resource emits card_data_json
+        // verbatim, iqama_number and all.
         return ResponseHelper::success(
-            new BusinessCardResource($card),
+            new PublicCardResource($card),
             __('messages.data_retrieved')
         );
     }
