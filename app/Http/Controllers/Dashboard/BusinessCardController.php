@@ -43,12 +43,13 @@ class BusinessCardController extends Controller
 
     public function downloadVCard(BusinessCard $card)
     {
-        // This route is public and bound on the primary key, so it used to hand
-        // out a full contact card — name, company, title, both phones, email —
-        // for ANY sequential id, no matter whether that card was a draft, had
-        // been deactivated, or had expired. The page itself 404s in all three
-        // cases; the download has to agree with it, or the publish switch means
-        // nothing.
+        // This route is public and used to be bound on the primary key with no
+        // gate at all, so it handed out a full contact card — name, company,
+        // title, both phones, email — for ANY sequential id, whether that card
+        // was a draft, deactivated or expired. Two things close that: the route
+        // now binds on public_url so the directory can't be walked, and this
+        // gate makes the download agree with the page, which 404s in all three
+        // cases. Without it the publish switch would mean nothing.
         if (! $card->isPubliclyVisible()) {
             abort(404);
         }

@@ -31,7 +31,13 @@ use App\Http\Controllers\Mobile\ReceivedContactController;
 
 Route::prefix('v1')->group( function () {
     Route::get('/card/{slug}', [BusinessCardController::class, 'CardSlug']);
-    Route::get('/business-card/{card}/vcard', [BusinessCardController::class, 'downloadVCard'])
+    // Bound on the 40-character public_url, NOT the primary key. Bound on the
+    // id, this route let anyone walk 1, 2, 3… and collect a full contact card
+    // for every published employee on the platform; the visibility gate in the
+    // controller stops the unpublished ones leaking, but only an unguessable
+    // handle stops the directory being enumerable at all. Same handle as every
+    // other public surface.
+    Route::get('/business-card/{card:public_url}/vcard', [BusinessCardController::class, 'downloadVCard'])
         ->name('business-card.vcard');
 
     /*
