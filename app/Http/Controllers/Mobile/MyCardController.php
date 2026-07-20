@@ -7,6 +7,7 @@ use App\Http\Helpers\ResponseHelper;
 use App\Http\Requests\MyCardUpdateRequest;
 use App\Http\Resources\BusinessCardResource;
 use App\Models\BusinessCard;
+use App\Services\CardProvisioningService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
@@ -28,7 +29,7 @@ use Illuminate\Http\Request;
 class MyCardController extends Controller
 {
     /** Resolve the caller's own card, or null when they have none. */
-    private function resolveCard(Request $request): ?BusinessCard
+    private function resolveCard(Request $request, bool $provision = false): ?BusinessCard
     {
         $employee = $request->user()?->employee;
 
@@ -36,9 +37,26 @@ class MyCardController extends Controller
             return null;
         }
 
-        return BusinessCard::with(['template', 'employee.company', 'employee.department', 'employee.branch'])
+        $query = fn () => BusinessCard::with(['template', 'employee.company', 'employee.department', 'employee.branch'])
             ->where('employee_id', $employee->id)
             ->first();
+
+        $card = $query();
+
+        // Employees created before auto-provisioning shipped have no card at
+        // all, and provisioning is deliberately best-effort at creation time
+        // (it logs rather than failing the employee). Either way the app used
+        // to land on a 404 whose only action was a Retry that could never
+        // succeed. Creating it on first open closes that dead end for good.
+        if (! $card && $provision) {
+            (new CardProvisioningService())->provisionFor($employee);
+
+            // employee_id is UNIQUE, so a racing second request loses the
+            // insert and simply re-reads the row the winner created.
+            $card = $query();
+        }
+
+        return $card;
     }
 
     /**
@@ -49,7 +67,7 @@ class MyCardController extends Controller
      */
     public function show(Request $request)
     {
-        $card = $this->resolveCard($request);
+        $card = $this->resolveCard($request, provision: true);
 
         if (! $card) {
             return ResponseHelper::error(__('messages.no_card_yet'), null, 404);
@@ -148,12 +166,67 @@ class MyCardController extends Controller
             $card->employee?->company?->owner,
             __('messages.notif_card_review_title'),
             __('messages.notif_card_review_body', ['name' => $card->employee?->name ?? '']),
-            ['type' => 'card_review_requested', 'card_id' => $card->id]
+            [
+                'type'          => 'card_review_requested',
+                'card_id'       => $card->id,
+                'employee_name' => $card->employee?->name ?? '',
+            ]
         );
 
         return ResponseHelper::success(
             new BusinessCardResource($card->fresh(['template', 'employee.company'])),
             __('messages.business_card_submitted')
+        );
+    }
+
+    /**
+     * POST /mobile/my-card/reopen
+     *
+     * Put an editable card back in the employee's hands. Without this, every
+     * status other than draft was a one-way door: one accidental tap on "send
+     * for approval" froze the editor until the owner happened to respond, and a
+     * published card could never be updated again at all — so the whole screen
+     * read as broken.
+     *
+     * The public URL is unaffected. A card that has been live keeps serving its
+     * published snapshot for as long as the next version is being worked on.
+     */
+    public function reopen(Request $request)
+    {
+        $card = $this->resolveCard($request, provision: true);
+
+        if (! $card) {
+            return ResponseHelper::error(__('messages.no_card_yet'), null, 404);
+        }
+
+        if ($card->isEmployeeEditable()) {
+            return ResponseHelper::error(__('messages.card_already_editable'), null, 422);
+        }
+
+        // Withdrawing is only fair play until the owner has actually looked at
+        // it; after a verdict the card moves on to approved/published, which is
+        // the other branch below.
+        if ($card->status === BusinessCard::STATUS_SUBMITTED && $card->reviewed_at !== null) {
+            return ResponseHelper::error(__('messages.card_already_reviewed'), null, 422);
+        }
+
+        // A card that is live but was published before snapshots existed has
+        // nothing frozen to fall back on. Its current values ARE what the
+        // public is seeing, so capture them now, before the employee changes
+        // anything.
+        if ($card->status === BusinessCard::STATUS_PUBLISHED && ! is_array($card->published_snapshot)) {
+            $card->published_snapshot = $card->capturePublishedSnapshot();
+            $card->published_at = $card->published_at ?? now();
+        }
+
+        $card->status = BusinessCard::STATUS_DRAFT;
+        $card->submitted_at = null;
+        $card->review_comment = null;
+        $card->save();
+
+        return ResponseHelper::success(
+            new BusinessCardResource($card->fresh(['template', 'employee.company'])),
+            __('messages.business_card_reopened')
         );
     }
 }

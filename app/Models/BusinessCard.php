@@ -55,6 +55,11 @@ class BusinessCard extends Model implements HasMedia
         'theme_json',
         'review_comment',
         'customized_at',
+
+        // Frozen copy of what actually went live, so the employee can keep
+        // editing without the public page changing under them.
+        'published_snapshot',
+        'published_at',
     ];
 
     protected $casts = [
@@ -64,10 +69,21 @@ class BusinessCard extends Model implements HasMedia
         'reviewed_at' => 'datetime',
         'customized_at' => 'datetime',
         'theme_json' => 'array',
+        'published_snapshot' => 'array',
+        'published_at' => 'datetime',
         // Cast so callers can compare via Carbon (e.g. `expiry_public_url->isPast()`)
         // and the resource serialises consistently.
         'expiry_public_url' => 'datetime',
     ];
+
+    /**
+     * Photo URL taken from the published snapshot, when one has been applied.
+     *
+     * Not a database column — set only by applyPublishedSnapshot() so the
+     * public surfaces keep showing the approved photo while the employee is
+     * already working on a replacement.
+     */
+    protected ?string $snapshotPhotoUrl = null;
 
     public function registerMediaCollections(): void
     {
@@ -77,9 +93,121 @@ class BusinessCard extends Model implements HasMedia
     /** Absolute URL of the employee's photo, or null when none is set. */
     public function photoUrl(): ?string
     {
+        if ($this->snapshotPhotoUrl !== null) {
+            return $this->snapshotPhotoUrl;
+        }
+
         $url = $this->getFirstMediaUrl(self::PHOTO_COLLECTION);
 
         return $url !== '' ? $url : null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Publishing
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Freeze everything the public page renders.
+     *
+     * Called at publish time. The photo is copied out of the media library to
+     * its own file: the collection is singleFile(), so the next photo the
+     * employee uploads would otherwise delete the one the owner approved and
+     * leave the live card with a broken image.
+     */
+    public function capturePublishedSnapshot(): array
+    {
+        return [
+            'card_data_json'  => $this->card_data_json,
+            'bio'             => $this->bio,
+            'secondary_phone' => $this->secondary_phone,
+            'theme'           => $this->effectiveTheme(),
+            'photo'           => $this->copyPhotoForPublishing(),
+            'captured_at'     => now()->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Overlay the frozen snapshot onto this in-memory instance.
+     *
+     * Nothing is saved — it exists so the public page and the public JSON
+     * endpoint can render the approved version through the ordinary resource
+     * while the live row sits in draft for another round of edits.
+     */
+    public function applyPublishedSnapshot(): static
+    {
+        $snapshot = $this->published_snapshot;
+
+        if (! is_array($snapshot)) {
+            return $this;
+        }
+
+        $this->card_data_json  = $snapshot['card_data_json'] ?? $this->card_data_json;
+        $this->bio             = $snapshot['bio'] ?? null;
+        $this->secondary_phone = $snapshot['secondary_phone'] ?? null;
+        $this->theme_json      = is_array($snapshot['theme'] ?? null) ? $snapshot['theme'] : $this->theme_json;
+        $this->snapshotPhotoUrl = $snapshot['photo'] ?? null;
+
+        return $this;
+    }
+
+    /**
+     * Visible on the public URL?
+     *
+     * A card that was published once stays reachable while its employee edits
+     * the next version — the snapshot is what gets served. Only deactivating
+     * it, or letting the link expire, takes it down.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        if (! $this->is_active) {
+            return false;
+        }
+
+        if ($this->expiry_public_url && $this->expiry_public_url->isPast()) {
+            return false;
+        }
+
+        return $this->status === self::STATUS_PUBLISHED
+            || is_array($this->published_snapshot);
+    }
+
+    /** Has been live at least once, so re-editing it needs the snapshot path. */
+    public function hasBeenPublished(): bool
+    {
+        return $this->published_at !== null || is_array($this->published_snapshot);
+    }
+
+    private function copyPhotoForPublishing(): ?string
+    {
+        $media = $this->getFirstMedia(self::PHOTO_COLLECTION);
+
+        if (! $media) {
+            return null;
+        }
+
+        try {
+            $source = $media->getPath();
+
+            if (! is_file($source)) {
+                return $this->photoUrl();
+            }
+
+            $extension = pathinfo($source, PATHINFO_EXTENSION) ?: 'jpg';
+            $target    = 'published-cards/' . $this->id . '-' . substr(md5_file($source) ?: uniqid(), 0, 8) . '.' . $extension;
+
+            \Illuminate\Support\Facades\Storage::disk('public')
+                ->put($target, file_get_contents($source));
+
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($target);
+        } catch (\Throwable $e) {
+            // A card going live matters more than the frozen copy of its photo;
+            // fall back to the live URL rather than failing the publish.
+            \Illuminate\Support\Facades\Log::warning('Card photo snapshot failed: ' . $e->getMessage());
+
+            return $this->photoUrl();
+        }
     }
 
     /**
@@ -142,6 +270,11 @@ class BusinessCard extends Model implements HasMedia
     public function interactions()
     {
         return $this->hasMany(CardInteraction::class);
+    }
+
+    public function contactShares()
+    {
+        return $this->hasMany(CardContactShare::class);
     }
 
     /*

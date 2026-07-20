@@ -91,6 +91,19 @@ return [
     'notif_card_owner_approved_title' => 'Your card was approved',
     'notif_card_owner_approved_body'  => 'Your company approved your business card. It will be published shortly.',
 
+    'notif_card_owner_rejected_title' => 'Your card was not approved',
+    'notif_card_owner_rejected_body'  => 'Your company did not approve your card: :reason. You can edit it and send it again.',
+    'notif_card_ready_title' => 'Your business card is ready',
+    'notif_card_ready_body'  => 'Your company created your digital business card. Open the app to add your photo, colours and bio.',
+    'notif_contact_received_title' => 'Someone shared their contact with you',
+    'notif_contact_received_body'  => ':name shared their contact details after viewing your card.',
+    'contact_shared' => 'Thanks — your details have been shared.',
+    'contact_not_found' => 'Contact not found.',
+
+    'card_already_editable' => 'This card is already open for editing.',
+    'card_already_reviewed' => 'Your company has already reviewed this card, so it can no longer be withdrawn.',
+    'business_card_reopened' => 'Card reopened for editing. Your published card stays live until the new version is approved.',
+
     'cannot_approve_own_card' => 'You cannot approve your own card. Your company reviews it for you.',
 
     'password_expired' => 'Your password has expired. Please reset your password to continue.',

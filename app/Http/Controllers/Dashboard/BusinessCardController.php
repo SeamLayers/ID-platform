@@ -43,9 +43,32 @@ class BusinessCardController extends Controller
 
     public function downloadVCard(BusinessCard $card)
     {
+        // This route is public and bound on the primary key, so it used to hand
+        // out a full contact card — name, company, title, both phones, email —
+        // for ANY sequential id, no matter whether that card was a draft, had
+        // been deactivated, or had expired. The page itself 404s in all three
+        // cases; the download has to agree with it, or the publish switch means
+        // nothing.
+        if (! $card->isPubliclyVisible()) {
+            abort(404);
+        }
+
         $employee = $card->employee;
 
+        // The row is whatever the employee is editing right now, so the .vcf
+        // must carry the version the owner approved — the same one the public
+        // page renders — not an unreviewed draft.
+        if ($card->status !== BusinessCard::STATUS_PUBLISHED) {
+            $card->applyPublishedSnapshot();
+        }
+
         $publicUrl = url('/api/v1/card/' . $card->public_url);
+
+        // Omitted entirely rather than emitted empty: a bare TEL line makes some
+        // address books create a blank second number.
+        $secondaryTel = filled($card->secondary_phone)
+            ? "\nTEL;TYPE=CELL:{$card->secondary_phone}"
+            : '';
 
         $vcard = <<<VCF
 BEGIN:VCARD
@@ -54,7 +77,7 @@ N:{$employee->name}
 FN:{$employee->name}
 ORG:{$employee->company->name}
 TITLE:{$employee->position}
-TEL;TYPE=WORK,CELL:{$employee->phone}
+TEL;TYPE=WORK,CELL:{$employee->phone}{$secondaryTel}
 EMAIL;TYPE=WORK:{$employee->email}
 URL:{$publicUrl}
 NOTE:Digital Business Card
@@ -221,16 +244,19 @@ VCF;
             ->where('is_active', true)
             ->firstOrFail();
 
-        // The public page must obey the same gate as the JSON endpoint:
-        // a card only goes live once it is PUBLISHED and still in date.
-        // Previously any draft/submitted/rejected card was already publicly
-        // readable the moment it was created, so "publish makes it live"
-        // wasn't actually true.
-        if (
-            $card->status !== 'published'
-            || ($card->expiry_public_url && $card->expiry_public_url->isPast())
-        ) {
+        // The public page must obey the same gate as the JSON endpoint: a card
+        // only goes live once it is PUBLISHED and still in date. Previously any
+        // draft/submitted/rejected card was already publicly readable the
+        // moment it was created, so "publish makes it live" wasn't actually
+        // true. A card that has been published before stays reachable while its
+        // employee edits the next version — the frozen snapshot is what gets
+        // served, never the work in progress.
+        if (! $card->isPubliclyVisible()) {
             abort(404);
+        }
+
+        if ($card->status !== BusinessCard::STATUS_PUBLISHED) {
+            $card->applyPublishedSnapshot();
         }
 
         return view('business-card.profile', [
@@ -368,7 +394,14 @@ VCF;
             $card->employee?->user,
             __('messages.notif_card_changes_title'),
             __('messages.notif_card_changes_body', ['comment' => $validated['comment']]),
-            ['type' => 'card_changes_requested', 'card_id' => $card->id]
+            [
+                'type'    => 'card_changes_requested',
+                'card_id' => $card->id,
+                // The raw comment travels alongside the rendered body so a
+                // client can present it as its own block rather than parsing
+                // it back out of a translated sentence.
+                'comment' => $validated['comment'],
+            ]
         );
 
         return ResponseHelper::success(
@@ -440,7 +473,15 @@ VCF;
                 $card->employee?->company?->owner,
                 __('messages.notif_card_approved_title'),
                 __('messages.notif_card_approved_body', ['name' => $card->employee?->name ?? '']),
-                ['type' => 'card_approved', 'card_id' => $card->id]
+                // A DIFFERENT type from the employee-facing one above: both used
+                // to be 'card_approved', so a client had no way to tell whether
+                // to open the review queue or the employee's own card. The
+                // employee-facing string is kept as-is for older app builds.
+                [
+                    'type'    => 'card_approved_by_employee',
+                    'card_id' => $card->id,
+                    'name'    => $card->employee?->name ?? '',
+                ]
             );
         }
 
@@ -479,16 +520,31 @@ VCF;
             'rejection_reason'  => $data['rejection_reason'],
         ]);
 
-        // Tell the company owner the employee rejected their card (with reason).
-        $card->load('employee.company.owner');
+        // Tell whoever DIDN'T press the button. Rejecting is the one review
+        // outcome that used to notify the company owner in every case — so when
+        // the owner rejected, they told themselves and the employee was never
+        // informed, even though `rejected` puts the card back in their hands to
+        // fix. Mirrors the branch in approve().
+        $card->load(['employee.company.owner', 'employee.user']);
+        $actorIsOwner = auth()->user()?->hasAnyRole(['owner', 'superadmin']) ?? false;
+
         (new NotificationService())->notifyUser(
-            $card->employee?->company?->owner,
-            __('messages.notif_card_rejected_title'),
-            __('messages.notif_card_rejected_body', [
-                'name'   => $card->employee?->name ?? '',
-                'reason' => $data['rejection_reason'],
-            ]),
-            ['type' => 'card_rejected', 'card_id' => $card->id]
+            $actorIsOwner ? $card->employee?->user : $card->employee?->company?->owner,
+            $actorIsOwner
+                ? __('messages.notif_card_owner_rejected_title')
+                : __('messages.notif_card_rejected_title'),
+            $actorIsOwner
+                ? __('messages.notif_card_owner_rejected_body', ['reason' => $data['rejection_reason']])
+                : __('messages.notif_card_rejected_body', [
+                    'name'   => $card->employee?->name ?? '',
+                    'reason' => $data['rejection_reason'],
+                ]),
+            [
+                'type'    => $actorIsOwner ? 'card_rejected' : 'card_rejected_by_employee',
+                'card_id' => $card->id,
+                'reason'  => $data['rejection_reason'],
+                'name'    => $card->employee?->name ?? '',
+            ]
         );
 
         return ResponseHelper::success(
@@ -517,6 +573,11 @@ VCF;
         $card->update([
             'status'    => 'published',
             'is_active' => true,
+            // Freeze what is going live BEFORE anyone can edit it again, so the
+            // public URL keeps serving this exact version through the next
+            // round of employee edits.
+            'published_snapshot' => $card->capturePublishedSnapshot(),
+            'published_at'       => now(),
         ]);
 
         // Tell the employee their card is live and shareable.

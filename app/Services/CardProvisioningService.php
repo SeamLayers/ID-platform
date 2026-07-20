@@ -54,7 +54,7 @@ class CardProvisioningService
 
             $generated = $this->codes->generateAll($employee);
 
-            return BusinessCard::create([
+            $card = BusinessCard::create([
                 'employee_id' => $employee->id,
                 'template_id' => $template->id,
                 'card_data_json' => [
@@ -78,6 +78,19 @@ class CardProvisioningService
                 'expiry_public_url' => now()->addDays(365),
                 'status'            => BusinessCard::STATUS_DRAFT,
             ]);
+
+            // The first step of the whole card flow used to be silent: a card
+            // was waiting to be personalised and the employee had no way to
+            // know. Best-effort like every other notify — notifyUser swallows
+            // its own failures — so it can't undo the card we just made.
+            (new NotificationService())->notifyUser(
+                $employee->user,
+                __('messages.notif_card_ready_title'),
+                __('messages.notif_card_ready_body'),
+                ['type' => 'card_ready_to_personalise', 'card_id' => $card->id]
+            );
+
+            return $card;
         } catch (\Throwable $e) {
             // Logged, not raised: the employee (and their login) matter more
             // than the card, and the owner can still issue one by hand.

@@ -52,6 +52,16 @@ class BusinessCardResource extends JsonResource
             'customized_at' => $this->customized_at,
             // Whether the app should show the editor or a read-only card.
             'can_edit' => $this->isEmployeeEditable(),
+            // Whether the employee can take the card back into their own hands.
+            // Withdrawing a submission is only offered while the owner has not
+            // ruled on it; an approved or live card can always be reopened for
+            // another round, because the public URL keeps serving the snapshot.
+            'can_reopen' => ! $this->isEmployeeEditable()
+                && ! ($this->status === 'submitted' && $this->reviewed_at !== null),
+            // Live to the public right now — stays true while a newer version
+            // is being edited, since the snapshot is still what visitors see.
+            'is_live' => $this->isPubliclyVisible(),
+            'published_at' => $this->published_at,
 
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),

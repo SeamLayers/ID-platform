@@ -47,8 +47,12 @@ class NotificationService
             Log::warning('Notification create failed: ' . $e->getMessage());
         }
 
+        // 'web-dashboard' is the pre-permission placeholder the dashboard sends;
+        // 'flutter_dev_token' is the literal the mobile app sends at login
+        // because auth/login requires the field. Neither is a real FCM token,
+        // so pushing to them only fills the log with warnings.
         $token = $user->device_token;
-        if ($token && $token !== 'web-dashboard') {
+        if ($token && ! in_array($token, ['web-dashboard', 'flutter_dev_token'], true)) {
             try {
                 // FCM data values must be strings.
                 $stringData = array_map(fn ($v) => (string) $v, $data);

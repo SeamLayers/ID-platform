@@ -19,6 +19,16 @@ class NotificationController extends Controller
         $limit = $limit > 0 ? min($limit, 200) : 50;
 
         $notifications = Notification::where('user_id', $request->user()->id)
+            // Cursor rather than ?page=, for the same reason the envelope stays
+            // flat: it is purely additive, so an older client that never sends
+            // it keeps getting exactly what it got before. Ids descend with
+            // created_at, so "older than this one" is a single indexed compare.
+            ->when($request->filled('before_id'), function ($q) use ($request) {
+                $q->where('id', '<', (int) $request->input('before_id'));
+            })
+            ->when($request->boolean('unread_only'), function ($q) {
+                $q->where('is_read', false);
+            })
             ->latest()
             ->limit($limit)
             ->get()
@@ -70,7 +80,17 @@ class NotificationController extends Controller
         $notification->is_read = 1;
         $notification->save();
 
-        return ResponseHelper::success(true, 'Notification marked as read');
+        return ResponseHelper::success(true, __('messages.data_updated'));
     }
 
+    /** Dismiss a single row. Scoped, so one user can't delete another's. */
+    public function destroy($id)
+    {
+        Notification::where('user_id', auth()->id())
+            ->where('id', $id)
+            ->firstOrFail()
+            ->delete();
+
+        return ResponseHelper::success(true, __('messages.data_deleted'));
+    }
 }

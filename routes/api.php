@@ -26,6 +26,7 @@ use \App\Http\Controllers\Dashboard\{
 };
 use App\Http\Controllers\Public\PublicCardController;
 use App\Http\Controllers\Mobile\MyCardController;
+use App\Http\Controllers\Mobile\ReceivedContactController;
 
 
 Route::prefix('v1')->group( function () {
@@ -159,10 +160,26 @@ Route::prefix('v1')->group( function () {
                  *   POST my-card         → personalise (photo, colours, bio,
                  *                          second phone) — multipart
                  *   POST my-card/submit  → hand it to the owner for review
+                 *   POST my-card/reopen  → take it back into draft: withdraw an
+                 *                          unreviewed submission, or start a new
+                 *                          version of an approved/live card
+                 *                          (the published one stays up meanwhile)
                  */
                 Route::get('my-card', [MyCardController::class, 'show']);
                 Route::post('my-card', [MyCardController::class, 'update']);
                 Route::post('my-card/submit', [MyCardController::class, 'submit']);
+                Route::post('my-card/reopen', [MyCardController::class, 'reopen']);
+
+                /*
+                 * The employee's inbox of people who scanned their card and
+                 * sent their own details back. Scoped to the authenticated
+                 * user's employee row inside the controller — there is no
+                 * id-addressable path into another employee's contacts.
+                 */
+                Route::get('received-contacts', [ReceivedContactController::class, 'index']);
+                Route::get('received-contacts/unread-count', [ReceivedContactController::class, 'unreadCount']);
+                Route::post('received-contacts/{id}/read', [ReceivedContactController::class, 'markAsRead']);
+                Route::delete('received-contacts/{id}', [ReceivedContactController::class, 'destroy']);
             });
 
     });
@@ -184,6 +201,12 @@ Route::prefix('v1')->group( function () {
     Route::get('cards/{public_url}', [PublicCardController::class, 'show']);
     Route::post('cards/{public_url}/track', [PublicCardController::class, 'track']);
 
+    // Reverse contact exchange: a visitor with no app sends their OWN details
+    // back to the card holder. Unauthenticated and therefore IP-throttled —
+    // it is the only public route on the platform that writes personal data.
+    Route::post('cards/{public_url}/contact', [PublicCardController::class, 'shareContact'])
+        ->middleware('throttle:card-share');
+
 
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -192,18 +215,11 @@ Route::prefix('v1')->group( function () {
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
 });
 
-
-    // sent notification
-
-    Route::get('notifications-firebase',function (){
-        $firebase = new \App\Services\FirebaseService();
-        $firebase->sendToDevice('eXqn4RqqTYeieigFQDAT9n:APA91bHK13e3JFTAouXNdbULg46oBGHScD7VZnsKKKv_FGSXhUO2sP2p0KhHOsa6FOUl7GFNucgJXVvV4tUsuhUtIu_E6TSektlAejZ22HH9_Jlqa0580dg',
-            "Hi Semmo Basel ",
-            'new order',[]
-        );
-    });
-
+    // The `notifications-firebase` debug route used to live here: no auth, and
+    // it fired a real push at a device token hardcoded in the source. Removed —
+    // anyone who found the URL could spam that handset.
 
 });

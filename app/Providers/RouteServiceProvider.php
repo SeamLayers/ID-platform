@@ -28,6 +28,21 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Reverse contact exchange is unauthenticated and writes a row per call,
+        // so it is keyed on IP alone. The per-minute limit stops a scripted
+        // burst; the daily cap stops a slow drip that would otherwise flood one
+        // employee's inbox overnight. Conference Wi-Fi shares an egress IP, so
+        // the daily figure is generous rather than tight.
+        RateLimiter::for('card-share', function (Request $request) {
+            // The two keys must differ: ThrottleRequests hashes limiterName+key,
+            // so identical keys would make both limits share one counter and the
+            // shorter decay would silently reset the daily cap.
+            return [
+                Limit::perMinute(5)->by('card-share:min:' . $request->ip()),
+                Limit::perDay(50)->by('card-share:day:' . $request->ip()),
+            ];
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
