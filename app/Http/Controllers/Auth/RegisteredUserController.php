@@ -212,7 +212,6 @@ Google Play / Apple Store";
         VerificationCode::create([
             'phone_number' => $phoneNumber,
             'country_code' => $countryCode,
-            'code' => $otp,
             'expiration_date' => now()->addMinutes(5),
             'is_used' => false,
         ]);
@@ -220,8 +219,7 @@ Google Play / Apple Store";
          SmsService::sendSMS($countryCode.$phoneNumber, $otp);
 
         return ResponseHelper::success([
-            'phone' => "{$countryCode}{$phoneNumber}",
-            'otp' => $otp
+            'phone' => "{$countryCode}{$phoneNumber}"
         ], __('messages.otp_sent'));
     }
 

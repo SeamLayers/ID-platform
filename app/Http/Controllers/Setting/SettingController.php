@@ -96,26 +96,4 @@ class SettingController extends Controller
             'content' => $setting?->value ?? ''
         ]);
     }
-
-
-
-    public function AppStatistics()
-    {
-        $stats = [
-            'users_count'        => User::count(),
-            'services_count'     => Advertisement::count(),
-
-            'contracts_count'    => AdvertisementContracts::count(),
-            'completed_contracts'=> AdvertisementContracts::where('contract_status', 'completed')->count(),
-
-            'total_earnings'     => AdvertisementContracts::where('contract_status', 'completed')->sum('actual_amount'),
-
-            'works_count'        => OurWork::count(),
-
-            'ratings_count'      => Rating::count(),
-            'rating_avg'         => round(Rating::avg('rate'), 1),
-        ];
-
-        return ResponseHelper::success($stats,'app stats retrieved successfully');
-    }
 }
