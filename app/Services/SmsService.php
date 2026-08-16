@@ -13,8 +13,10 @@ class SmsService
     {
         try {
 
-            $response = Http::withoutVerifying()
-                ->timeout(10)
+            // Certificate verification stays ON: this request carries the
+            // account token and the user's one-time passcode, and
+            // api.oursms.com presents a valid publicly-trusted certificate.
+            $response = Http::timeout(10)
                 ->asForm()
                 ->post(config('integration.oursms.url'), [
                     'token' => config('integration.oursms.token'),
