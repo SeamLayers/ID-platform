@@ -76,8 +76,8 @@ class EmployeeRequest extends FormRequest
             'phone' => [
                 'nullable',
                 'string',
-                'regex:/^966[0-9]{9}$/',
-                'unique:employees,phone',
+                'regex:/^966[0-9]+$/',
+                'unique:employees,phone,' . $employeeId,
             ],
             'status'          => ['required', 'in:active,inactive'],
             'position'          => ['required'],
