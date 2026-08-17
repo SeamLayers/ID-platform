@@ -73,7 +73,12 @@ class EmployeeRequest extends FormRequest
 
             'name'            => ['required', 'string', 'max:255'],
             'email'           => $emailRules,
-            'phone'           => ['nullable', 'string', 'unique:employees,phone,' . $employeeId],
+            'phone' => [
+                'nullable',
+                'string',
+                'regex:/^966[0-9]{9}$/',
+                'unique:employees,phone,' . $employeeId,
+            ],
             'status'          => ['required', 'in:active,inactive'],
             'position'          => ['required'],
 

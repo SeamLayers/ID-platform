@@ -33,7 +33,11 @@ class OwnerCompanyUpdateRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^966[0-9]{9}$/',
+            ],
             'commercial_register' => 'nullable|string|max:255',
             'email' => [
                 'required',

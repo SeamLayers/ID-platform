@@ -43,7 +43,8 @@ class StoreUserRequest extends FormRequest
             'phone' => [
                 'required',
                 'string',
-                'max:20'
+                'regex:/^966[0-9]+$/',
+                'max:20',
             ],
         ];
     }

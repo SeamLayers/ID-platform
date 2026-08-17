@@ -35,8 +35,12 @@ class MyCardUpdateRequest extends FormRequest
             'bio'             => ['sometimes', 'nullable', 'string', 'max:500'],
             // Second contact number. Saudi/E.164-ish; kept permissive because
             // the mobile client already normalises before sending.
-            'secondary_phone' => ['sometimes', 'nullable', 'string', 'max:30'],
-
+            'secondary_phone' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^966[0-9]{9}$/',
+            ],
             // Colour overrides layered on the template's theme. Each key is
             // optional; anything absent falls back to the template.
             'theme'            => ['sometimes', 'nullable', 'array'],

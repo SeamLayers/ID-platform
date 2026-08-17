@@ -37,7 +37,12 @@ class CompanyRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email'),
             ],
-            'owner_phone' => ['nullable', 'string', 'max:20'],
+            'owner_phone' => [
+                'nullable',
+                'string',
+                'regex:/^966[0-9]+$/',
+                'max:15',
+            ],
             'name' => 'required|string|max:255',
             'commercial_register' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',

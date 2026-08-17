@@ -77,7 +77,12 @@ class BusinessCardRequest extends FormRequest
             // Presentation fields shared with the employee's mobile editor, so
             // an owner can author the card up front and the employee sees it.
             'bio'             => ['sometimes', 'nullable', 'string', 'max:500'],
-            'secondary_phone' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'secondary_phone' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^966[0-9]{9}$/',
+            ],
             'theme'            => ['sometimes', 'nullable', 'array'],
             'theme.background' => ['sometimes', 'nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
             'theme.text'       => ['sometimes', 'nullable', 'string', 'regex:/^#([0-9a-fA-F]{6})$/'],
