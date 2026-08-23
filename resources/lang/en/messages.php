@@ -108,4 +108,17 @@ return [
     'cannot_approve_own_card' => 'You cannot approve your own card. Your company reviews it for you.',
 
     'password_expired' => 'Your password has expired. Please reset your password to continue.',
+    // ── Apple Wallet pass field labels. Short on purpose: Wallet renders a
+    //    label above its value in a narrow column and truncates without mercy.
+    'wallet_pass_unavailable' => 'Apple Wallet passes are not available yet.',
+    'business_card' => 'Business card',
+    'name' => 'Name',
+    'position' => 'Position',
+    'company' => 'Company',
+    'department' => 'Department',
+    'phone' => 'Phone',
+    'secondary_phone' => 'Second phone',
+    'email' => 'Email',
+    'bio' => 'About',
+    'card_link' => 'Card link',
 ];
