@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Wallet\AppleWalletService;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -50,6 +51,12 @@ class PublicCardResource extends JsonResource
                 : null,
 
             'public_url' => url('/api/v1/card/' . $this->public_url),
+
+            // Lets the visitor holding somebody else's card add it to their own
+            // Wallet. Null when the server has no Pass Type ID certificate, and
+            // the clients hide the button on null.
+            'wallet_pass_url' => app(AppleWalletService::class)
+                ->passUrlFor($this->resource),
 
             'bio' => $this->bio,
             'secondary_phone' => $this->secondary_phone,

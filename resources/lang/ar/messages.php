@@ -120,6 +120,16 @@ return [
     'cannot_approve_own_card' => 'لا يمكنك الموافقة على بطاقتك بنفسك. تقوم شركتك بمراجعتها.',
 
     'password_expired' => 'انتهت صلاحية كلمة المرور الخاصة بك. يرجى إعادة تعيين كلمة المرور للمتابعة.',
+    // ── تسميات حقول بطاقة Apple Wallet
+    'wallet_pass_unavailable' => 'بطاقات Apple Wallet غير متاحة حاليًا.',
+    'business_card' => 'بطاقة أعمال',
+    'name' => 'الاسم',
+    'position' => 'المسمى الوظيفي',
+    'company' => 'الشركة',
+    'department' => 'القسم',
+    'phone' => 'الهاتف',
+    'secondary_phone' => 'هاتف آخر',
+    'email' => 'البريد الإلكتروني',
+    'bio' => 'نبذة',
+    'card_link' => 'رابط البطاقة',
 ];
-
-

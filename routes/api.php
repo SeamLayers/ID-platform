@@ -25,6 +25,7 @@ use \App\Http\Controllers\Dashboard\{
     OverviewController
 };
 use App\Http\Controllers\Public\PublicCardController;
+use App\Http\Controllers\Public\WalletPassController;
 use App\Http\Controllers\Mobile\MyCardController;
 use App\Http\Controllers\Mobile\ReceivedContactController;
 
@@ -220,6 +221,13 @@ Route::prefix('v1')->group( function () {
     */
     Route::get('cards/{public_url}', [PublicCardController::class, 'show']);
     Route::post('cards/{public_url}/track', [PublicCardController::class, 'track']);
+
+    // "Add to Apple Wallet". Unauthenticated for the same reason as the card
+    // page: whoever is adding the card has no account. iOS shows its Add sheet
+    // for anything served as application/vnd.apple.pkpass, so the app and the
+    // web page both just open this URL.
+    Route::get('cards/{public_url}/wallet.pkpass', [WalletPassController::class, 'show'])
+        ->name('cards.wallet-pass');
 
     // Reverse contact exchange: a visitor with no app sends their OWN details
     // back to the card holder. Unauthenticated and therefore IP-throttled —
