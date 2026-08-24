@@ -212,6 +212,7 @@ Google Play / Apple Store";
         VerificationCode::create([
             'phone_number' => $phoneNumber,
             'country_code' => $countryCode,
+            'code' => (string) $otp,
             'expiration_date' => now()->addMinutes(5),
             'is_used' => false,
         ]);
