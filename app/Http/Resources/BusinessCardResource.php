@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Wallet\AppleWalletService;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
@@ -62,6 +63,13 @@ class BusinessCardResource extends JsonResource
             // is being edited, since the snapshot is still what visitors see.
             'is_live' => $this->isPubliclyVisible(),
             'published_at' => $this->published_at,
+
+            // Null until the Pass Type ID certificate is installed on the
+            // server (see config/wallet.php). The app keys its "Add to Apple
+            // Wallet" button off this being non-null, so a deployment without
+            // the certificate simply has no button rather than one that fails.
+            'wallet_pass_url' => app(AppleWalletService::class)
+                ->passUrlFor($this->resource),
 
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
