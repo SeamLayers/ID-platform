@@ -55,7 +55,7 @@ class LegalContentSeeder extends Seeder
     private function privacyEn(): string
     {
         return <<<'HTML'
-<p><em>Last updated: 15 August 2026</em></p>
+<p><em>Last updated: 25 August 2026</em></p>
 
 <p><strong>iD+ by Mhawer</strong> is a corporate digital business card platform. A company
 subscribes, adds its employees, and each employee receives a digital business card they can
@@ -108,8 +108,15 @@ time.</p>
 <ul>
   <li><strong>Photo library</strong> — only if you choose an existing photo for your card.</li>
   <li><strong>Camera</strong> — only if you choose to take a new photo for your card.</li>
-  <li><strong>NFC</strong> — to write your card to a physical NFC tag. Used only while the
-      sharing screen is open.</li>
+  <li><strong>Contacts on iPhone and iPad</strong> — iD+ does not request Contacts access.
+      Tapping “Save to contacts” opens Apple's pre-filled New Contact sheet. You review the
+      visible fields and choose whether to save them. iD+ cannot read your existing contacts,
+      does not receive the saved contact back, and never uploads device contacts to our server.</li>
+  <li><strong>Contacts on Android</strong> — Android may offer its add-only write permission when
+      you tap “Save to contacts.” iD+ never requests permission to read your address book and
+      never uploads device contacts.</li>
+  <li><strong>NFC on Android only</strong> — to write your card link to a physical NFC tag while
+      the sharing screen is open. The iOS app does not request or use NFC access.</li>
 </ul>
 <p>Each permission is requested only when you use that feature, and the app works without
 granting them — you simply cannot use that particular feature.</p>
@@ -164,7 +171,7 @@ HTML;
     private function privacyAr(): string
     {
         return <<<'HTML'
-<p><em>آخر تحديث: ١٥ أغسطس ٢٠٢٦</em></p>
+<p><em>آخر تحديث: ٢٥ أغسطس ٢٠٢٦</em></p>
 
 <p><strong>‎iD+ من Mhawer</strong> منصة بطاقات عمل رقمية للشركات. تشترك المنشأة، وتضيف موظفيها،
 ويحصل كل موظف على بطاقة عمل رقمية يشاركها عبر لمسة NFC أو رمز QR أو رابط. توضّح هذه السياسة
@@ -210,7 +217,14 @@ HTML;
 <ul>
   <li><strong>مكتبة الصور</strong> — فقط إن اخترت صورة موجودة لبطاقتك.</li>
   <li><strong>الكاميرا</strong> — فقط إن اخترت التقاط صورة جديدة.</li>
-  <li><strong>NFC</strong> — لكتابة بطاقتك على بطاقة NFC مادية، ويُستخدم فقط أثناء فتح شاشة المشاركة.</li>
+  <li><strong>جهات الاتصال على iPhone وiPad</strong> — لا يطلب ‎iD+ صلاحية الوصول إلى جهات
+      الاتصال. عند الضغط على «حفظ في جهات الاتصال» يفتح التطبيق شاشة «جهة اتصال جديدة» الأصلية
+      من Apple وبها البيانات الظاهرة مسبقًا؛ تراجعها أنت وتقرر حفظها. لا يستطيع ‎iD+ قراءة جهات
+      اتصالك الحالية، ولا يستلم نسخة مما حفظته، ولا يرفع جهات اتصال الجهاز إلى خوادمنا.</li>
+  <li><strong>جهات الاتصال على Android</strong> — قد يطلب Android صلاحية الإضافة فقط عند الضغط
+      على الحفظ. لا يطلب ‎iD+ قراءة دفتر العناوين ولا يرفع جهات اتصال الجهاز.</li>
+  <li><strong>NFC على Android فقط</strong> — لكتابة رابط بطاقتك على بطاقة NFC مادية أثناء فتح
+      شاشة المشاركة. لا يطلب تطبيق iOS صلاحية NFC ولا يستخدمها.</li>
 </ul>
 <p>يُطلب كل إذن عند استخدام الميزة فقط، ويعمل التطبيق بدونها غير أنك لن تتمكن من استخدام تلك
 الميزة تحديدًا.</p>
