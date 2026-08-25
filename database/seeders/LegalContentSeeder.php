@@ -111,10 +111,10 @@ time.</p>
   <li><strong>Contacts on iPhone and iPad</strong> — iD+ does not request Contacts access.
       Tapping “Save to contacts” opens Apple's pre-filled New Contact sheet. You review the
       visible fields and choose whether to save them. iD+ cannot read your existing contacts,
-      does not receive the saved contact back, and never uploads device contacts to our server.</li>
-  <li><strong>Contacts on Android</strong> — Android may offer its add-only write permission when
-      you tap “Save to contacts.” iD+ never requests permission to read your address book and
-      never uploads device contacts.</li>
+      does not read or store the contact you save, and never uploads device contacts to our server.</li>
+  <li><strong>Contacts on Android</strong> — iD+ shares an importable vCard through Android's
+      system share sheet. It requests no permission to read or write your address book and never
+      uploads device contacts.</li>
   <li><strong>NFC on Android only</strong> — to write your card link to a physical NFC tag while
       the sharing screen is open. The iOS app does not request or use NFC access.</li>
 </ul>
@@ -220,9 +220,10 @@ HTML;
   <li><strong>جهات الاتصال على iPhone وiPad</strong> — لا يطلب ‎iD+ صلاحية الوصول إلى جهات
       الاتصال. عند الضغط على «حفظ في جهات الاتصال» يفتح التطبيق شاشة «جهة اتصال جديدة» الأصلية
       من Apple وبها البيانات الظاهرة مسبقًا؛ تراجعها أنت وتقرر حفظها. لا يستطيع ‎iD+ قراءة جهات
-      اتصالك الحالية، ولا يستلم نسخة مما حفظته، ولا يرفع جهات اتصال الجهاز إلى خوادمنا.</li>
-  <li><strong>جهات الاتصال على Android</strong> — قد يطلب Android صلاحية الإضافة فقط عند الضغط
-      على الحفظ. لا يطلب ‎iD+ قراءة دفتر العناوين ولا يرفع جهات اتصال الجهاز.</li>
+      اتصالك الحالية، ولا يقرأ أو يخزّن جهة الاتصال التي تحفظها، ولا يرفع جهات اتصال الجهاز إلى خوادمنا.</li>
+  <li><strong>جهات الاتصال على Android</strong> — يشارك ‎iD+ ملف vCard قابلًا للاستيراد عبر شاشة
+      المشاركة الأصلية في Android. لا يطلب صلاحية قراءة دفتر العناوين أو الكتابة فيه، ولا يرفع جهات
+      اتصال الجهاز.</li>
   <li><strong>NFC على Android فقط</strong> — لكتابة رابط بطاقتك على بطاقة NFC مادية أثناء فتح
       شاشة المشاركة. لا يطلب تطبيق iOS صلاحية NFC ولا يستخدمها.</li>
 </ul>
