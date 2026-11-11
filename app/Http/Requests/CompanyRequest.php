@@ -39,9 +39,7 @@ class CompanyRequest extends FormRequest
             ],
             'owner_phone' => [
                 'nullable',
-                'string',
-                'regex:/^966[0-9]+$/',
-                'max:15',
+                'string'
             ],
             'name' => 'required|string|max:255',
             'commercial_register' => 'nullable|string|max:255',
